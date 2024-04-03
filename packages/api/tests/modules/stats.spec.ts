@@ -13,6 +13,7 @@ import { createAndActiveUser, createUser } from "../__helpers__/userHelper";
 import userRepository from "../../src/modules/user/repositories/user.repository";
 import uniteLegalNamePort from "../../src/dataProviders/db/uniteLegalName/uniteLegalName.port";
 import rnaSirenService from "../../src/modules/rna-siren/rnaSiren.service";
+import { versionnedUrl } from "../__helpers__/routeHelper";
 
 const g = global as unknown as { app: unknown };
 
@@ -32,7 +33,7 @@ describe("/stats", () => {
                 spyGetNbUsersByRequestsOnPeriod.mockImplementationOnce(async () => DATA);
                 const expected = { data: DATA };
                 const actual = await request(g.app)
-                    .get("/stats/users/min-visits-on-period")
+                    .get(versionnedUrl("/stats/users/min-visits-on-period"))
                     .query({
                         nbReq: MIN_REQUESTS,
                         start: YESTERDAY.toString(),
@@ -51,7 +52,7 @@ describe("/stats", () => {
                 );
                 const expected = { message: ERROR_MESSAGE };
                 const actual = await request(g.app)
-                    .get("/stats/users/min-visits-on-period")
+                    .get(versionnedUrl("/stats/users/min-visits-on-period"))
                     .query({
                         nbReq: MIN_REQUESTS,
                         start: YESTERDAY.toString(),
@@ -73,7 +74,7 @@ describe("/stats", () => {
                     message: "JWT does not contain required scope.",
                 };
                 const actual = await request(g.app)
-                    .get("/stats/users/min-visits-on-period")
+                    .get(versionnedUrl("/stats/users/min-visits-on-period"))
                     .query({
                         nbReq: MIN_REQUESTS,
                         start: YESTERDAY.toString(),
@@ -97,7 +98,7 @@ describe("/stats", () => {
                 spyGetMedianRequestsOnPeriod.mockImplementationOnce(async () => DATA);
                 const expected = { data: DATA };
                 const actual = await request(g.app)
-                    .get("/stats/requests/median")
+                    .get(versionnedUrl("/stats/requests/median"))
                     .query({ start: YESTERDAY.toString(), end: TODAY.toString() })
                     .set("x-access-token", await createAndGetAdminToken())
                     .set("Accept", "application/json");
@@ -112,7 +113,7 @@ describe("/stats", () => {
                 );
                 const expected = { message: ERROR_MESSAGE };
                 const actual = await request(g.app)
-                    .get("/stats/requests/median")
+                    .get(versionnedUrl("/stats/requests/median"))
                     .query({ start: YESTERDAY.toString(), end: TODAY.toString() })
                     .set("x-access-token", await createAndGetAdminToken())
                     .set("Accept", "application/json");
@@ -130,7 +131,7 @@ describe("/stats", () => {
                     message: "JWT does not contain required scope.",
                 };
                 const actual = await request(g.app)
-                    .get("/stats/requests/median")
+                    .get(versionnedUrl("/stats/requests/median"))
                     .query({ start: YESTERDAY.toString(), end: TODAY.toString() })
                     .set("x-access-token", await createAndGetUserToken())
                     .set("Accept", "application/json")
@@ -143,7 +144,7 @@ describe("/stats", () => {
         describe("getTopAssociationsByPeriod()", () => {
             async function makeRequest(query) {
                 return request(g.app)
-                    .get(`/stats/associations${query}`)
+                    .get(versionnedUrl(`/stats/associations${query}`))
                     .set("x-access-token", await createAndGetAdminToken())
                     .set("Accept", "application/json");
             }
@@ -297,7 +298,7 @@ describe("/stats", () => {
                 };
                 const expected = { data: DATA };
                 await request(g.app)
-                    .get(`/stats/users/monthly/${YEAR}`)
+                    .get(versionnedUrl(`/stats/users/monthly/${YEAR}`))
                     .set("x-access-token", await createAndGetAdminToken())
                     .set("Accept", "application/json")
                     .expect(200, expected);
@@ -318,7 +319,7 @@ describe("/stats", () => {
                 });
                 const expected = { data: { admin: 1, active: 1, idle: 1, inactive: 1 } };
                 await request(g.app)
-                    .get(`/stats/users/status`)
+                    .get(versionnedUrl(`/stats/users/status`))
                     // createAndGetAdminToken() creates an admin user
                     .set("x-access-token", await createAndGetAdminToken())
                     .set("Accept", "application/json")

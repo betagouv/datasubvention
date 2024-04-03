@@ -20,6 +20,7 @@ import { IdentifiedRequest } from "./@types";
 import { initCron } from "./cron";
 import { headersMiddleware } from "./middlewares/headersMiddleware";
 import { ENV } from "./configurations/env.conf";
+import { versionMiddleware } from "./middlewares/VersionMiddleware";
 
 const appName = "api-subventions-asso";
 
@@ -38,6 +39,8 @@ export async function startServer(port = "8080", isTest = false) {
     const app = express();
 
     if (ENV !== "dev" && ENV !== "test") Sentry.init({ release: process.env.npm_package_version });
+
+    app.use(versionMiddleware);
     app.use(Sentry.Handlers.requestHandler());
     app.use(cookieParser());
     app.use(
@@ -54,7 +57,6 @@ export async function startServer(port = "8080", isTest = false) {
     app.use(BodyParserJSON);
 
     app.use(passport.initialize());
-
     authMocks(app); // Passport Part
 
     StatsAssoVisitRoutesRegex.forEach(route =>
@@ -67,11 +69,13 @@ export async function startServer(port = "8080", isTest = false) {
 
     app.use(headersMiddleware);
 
+    // const router = express.Router();
+
     RegisterRoutes(app); // TSOA Part
 
     RegisterSSERoutes(app); // SSE Part
 
-    app.use("/docs", ...(await docsMiddlewares()));
+    app.use("/:version/docs", ...(await docsMiddlewares()));
 
     app.use(Sentry.Handlers.errorHandler());
 

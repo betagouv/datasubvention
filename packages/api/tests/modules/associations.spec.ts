@@ -10,6 +10,7 @@ import statsService from "../../src/modules/stats/stats.service";
 import { siretToSiren } from "../../src/shared/helpers/SirenHelper";
 import { BadRequestError } from "../../src/shared/errors/httpErrors";
 import associationsService from "../../src/modules/associations/associations.service";
+import { versionnedUrl } from "../__helpers__/routeHelper";
 
 const g = global as unknown as { app: unknown };
 
@@ -24,7 +25,7 @@ describe("/association", () => {
     describe("/{structure_identifier}/subventions", () => {
         it("should return a list of subventions", async () => {
             const response = await request(g.app)
-                .get(`/association/${OsirisRequestEntityFixture.legalInformations.siret}/subventions`)
+                .get(versionnedUrl(`/association/${OsirisRequestEntityFixture.legalInformations.siret}/subventions`))
                 .set("x-access-token", await createAndGetUserToken())
                 .set("Accept", "application/json");
             expect(response.statusCode).toBe(200);
@@ -40,7 +41,7 @@ describe("/association", () => {
     describe("/{structure_identifier}", () => {
         it("should return an association", async () => {
             const response = await request(g.app)
-                .get(`/association/${OsirisRequestEntityFixture.legalInformations.siret}`)
+                .get(versionnedUrl(`/association/${OsirisRequestEntityFixture.legalInformations.siret}`))
                 .set("x-access-token", await createAndGetUserToken())
                 .set("Accept", "application/json");
             expect(response.statusCode).toBe(200);
@@ -50,7 +51,7 @@ describe("/association", () => {
         it("should add one visit on stats AssociationsVisit", async () => {
             const beforeRequestTime = new Date();
             await request(g.app)
-                .get(`/association/${OsirisRequestEntityFixture.legalInformations.siret}`)
+                .get(versionnedUrl(`/association/${OsirisRequestEntityFixture.legalInformations.siret}`))
                 .set("x-access-token", await createAndGetUserToken())
                 .set("Accept", "application/json");
             const actual = await statsService.getTopAssociationsByPeriod(1, beforeRequestTime, new Date());
@@ -67,7 +68,7 @@ describe("/association", () => {
         it("should not add one visits on stats AssociationsVisit because user is admin", async () => {
             const beforeRequestTime = new Date();
             await request(g.app)
-                .get(`/association/${OsirisRequestEntityFixture.legalInformations.siret}`)
+                .get(versionnedUrl(`/association/${OsirisRequestEntityFixture.legalInformations.siret}`))
                 .set("x-access-token", await createAndGetAdminToken())
                 .set("Accept", "application/json");
             const actual = await statsService.getTopAssociationsByPeriod(1, beforeRequestTime, new Date());
@@ -78,7 +79,7 @@ describe("/association", () => {
         it("should not add one visits on stats AssociationsVisit because user is not authenticated", async () => {
             const beforeRequestTime = new Date();
             await request(g.app)
-                .get(`/association/${OsirisRequestEntityFixture.legalInformations.siret}`)
+                .get(versionnedUrl(`/association/${OsirisRequestEntityFixture.legalInformations.siret}`))
                 .set("Accept", "application/json");
             const actual = await statsService.getTopAssociationsByPeriod(1, beforeRequestTime, new Date());
 
@@ -91,7 +92,7 @@ describe("/association", () => {
                 throw new BadRequestError();
             });
             await request(g.app)
-                .get(`/association/${OsirisRequestEntityFixture.legalInformations.siret}`)
+                .get(versionnedUrl(`/association/${OsirisRequestEntityFixture.legalInformations.siret}`))
                 .set("Accept", "application/json");
             const actual = await statsService.getTopAssociationsByPeriod(1, beforeRequestTime, new Date());
 
@@ -102,7 +103,13 @@ describe("/association", () => {
     describe("/{structure_identifier}/etablissements", () => {
         it("should return SimplifiedEtablissement[]", async () => {
             const response = await request(g.app)
-                .get(`/association/${siretToSiren(OsirisRequestEntityFixture.legalInformations.siret)}/etablissements`)
+                .get(
+                    versionnedUrl(
+                        `/association/${siretToSiren(
+                            OsirisRequestEntityFixture.legalInformations.siret,
+                        )}/etablissements`,
+                    ),
+                )
                 .set("x-access-token", await createAndGetUserToken())
                 .set("Accept", "application/json");
             expect(response.statusCode).toBe(200);

@@ -5,6 +5,7 @@ import AssociationNameFixture from "../__fixtures__/association-name.fixture";
 import apiEntrepriseService from "../../src/modules/providers/apiEntreprise/apiEntreprise.service";
 import dauphinService from "../../src/modules/providers/dauphin/dauphin.service";
 import rechercheEntreprises from "../../src/dataProviders/api/rechercheEntreprises/rechercheEntreprises.port";
+import { versionnedUrl } from "../__helpers__/routeHelper";
 
 const g = global as unknown as { app: unknown };
 
@@ -23,7 +24,7 @@ describe("/search", () => {
 
         it("should return 200", async () => {
             const response = await request(g.app)
-                .get(`/search/associations/NOT_FOUND_ASSO}`)
+                .get(versionnedUrl(`/search/associations/NOT_FOUND_ASSO}`))
                 .set("x-access-token", await createAndGetUserToken())
                 .set("Accept", "application/json");
 
@@ -32,7 +33,7 @@ describe("/search", () => {
 
         it("should return an Association from its Siren", async () => {
             const response = await request(g.app)
-                .get(`/search/associations/${AssociationNameFixture[0].siren}`)
+                .get(versionnedUrl(`/search/associations/${AssociationNameFixture[0].siren}`))
                 .set("x-access-token", await createAndGetUserToken())
                 .set("Accept", "application/json");
 
@@ -47,7 +48,7 @@ describe("/search", () => {
 
         it("should return an AssociationNameEntity from its name", async () => {
             const response = await request(g.app)
-                .get(`/search/associations/${AssociationNameFixture[0].name}`)
+                .get(versionnedUrl(`/search/associations/${AssociationNameFixture[0].name}`))
                 .set("x-access-token", await createAndGetUserToken())
                 .set("Accept", "application/json");
             expect(response.statusCode).toBe(200);

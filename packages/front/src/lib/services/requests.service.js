@@ -6,7 +6,7 @@ class RequestsService {
     _errorHooks = [];
 
     constructor() {
-        axios.defaults.baseURL = DATASUB_URL;
+        axios.defaults.baseURL = DATASUB_URL + "/v2";
 
         axios.interceptors.response.use(
             response => response,

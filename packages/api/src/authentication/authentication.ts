@@ -3,6 +3,7 @@ import { LoginRequest } from "../@types";
 import { UnauthorizedError } from "../shared/errors/httpErrors";
 import userActivationService from "../modules/user/services/activation/user.activation.service";
 
+// Authentication handler used both for SSE or TSOA routes
 export function expressAuthentication(req: LoginRequest, securityName = "jwt", scopes: string[] = []) {
     if (securityName !== "jwt") {
         console.warn(`${securityName} is not an valid security please change by jwt`);

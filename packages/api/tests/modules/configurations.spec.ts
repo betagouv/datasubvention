@@ -1,6 +1,7 @@
 import request = require("supertest");
 import { createAndGetAdminToken } from "../__helpers__/tokenHelper";
 import { BadRequestErrorCode, BadRequestErrorMessage } from "../../src/shared/errors/httpErrors";
+import { versionnedUrl } from "../__helpers__/routeHelper";
 
 const g = global as unknown as { app: unknown };
 
@@ -9,7 +10,7 @@ describe("/config", () => {
         describe("GET /domains", () => {
             it("should return SuccessResponse", async () => {
                 await request(g.app)
-                    .get("/config/domains")
+                    .get(versionnedUrl("/config/domains"))
                     .set("x-access-token", await createAndGetAdminToken())
                     .set("Accept", "application/json")
                     .expect(200, {
@@ -22,7 +23,7 @@ describe("/config", () => {
             const INVALID_DOMAIN = "@invalid.f";
             it("should return SuccessResponse", async () => {
                 await request(g.app)
-                    .post("/config/domains")
+                    .post(versionnedUrl("/config/domains"))
                     .send({ domain: VALID_DOMAIN })
                     .set("x-access-token", await createAndGetAdminToken())
                     .set("Accept", "application/json")
@@ -30,7 +31,7 @@ describe("/config", () => {
             });
             it("should return BadRequestError", async () => {
                 await request(g.app)
-                    .post("/config/domains")
+                    .post(versionnedUrl("/config/domains"))
                     .send({ domain: INVALID_DOMAIN })
                     .set("x-access-token", await createAndGetAdminToken())
                     .set("Accept", "application/json")

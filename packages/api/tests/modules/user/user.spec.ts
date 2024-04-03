@@ -9,6 +9,7 @@ import { ObjectId } from "mongodb";
 import notifyService from "../../../src/modules/notify/notify.service";
 import userActivationService from "../../../src/modules/user/services/activation/user.activation.service";
 import userCrudService from "../../../src/modules/user/services/crud/user.crud.service";
+import { versionnedUrl } from "../../__helpers__/routeHelper";
 
 const g = global as unknown as { app: unknown };
 
@@ -19,7 +20,7 @@ describe("UserController, /user", () => {
     describe("POST /admin/roles", () => {
         it("should return 200", async () => {
             const response = await request(g.app)
-                .post("/user/admin/roles")
+                .post(versionnedUrl("/user/admin/roles"))
                 .send({
                     email: "admin@beta.gouv.fr",
                     roles: [RoleEnum.admin],
@@ -37,7 +38,7 @@ describe("UserController, /user", () => {
             await userCrudService.createUser({ email: "futur-admin@beta.gouv.fr" });
 
             const response = await request(g.app)
-                .post("/user/admin/roles")
+                .post(versionnedUrl("/user/admin/roles"))
                 .send({
                     email: "futur-admin@beta.gouv.fr",
                     roles: [RoleEnum.admin],
@@ -58,7 +59,7 @@ describe("UserController, /user", () => {
             await userCrudService.createUser({ email: "futur-admin@beta.gouv.fr" });
 
             const response = await request(g.app)
-                .post("/user/admin/roles")
+                .post(versionnedUrl("/user/admin/roles"))
                 .send({
                     email: "futur-admin@beta.gouv.fr",
                     roles: ["test"],
@@ -72,7 +73,7 @@ describe("UserController, /user", () => {
 
         it("should return 401 because user dont have right", async () => {
             const response = await request(g.app)
-                .post("/user/admin/roles")
+                .post(versionnedUrl("/user/admin/roles"))
                 .send({
                     email: "admin@beta.gouv.fr",
                     roles: [RoleEnum.admin],
@@ -85,7 +86,7 @@ describe("UserController, /user", () => {
 
         it("should return 401 because user not connected", async () => {
             const response = await request(g.app)
-                .post("/user/admin/roles")
+                .post(versionnedUrl("/user/admin/roles"))
                 .send({
                     email: "admin@beta.gouv.fr",
                     roles: [RoleEnum.admin],
@@ -99,7 +100,7 @@ describe("UserController, /user", () => {
     describe("Put /password", () => {
         it("should return 200", async () => {
             const response = await request(g.app)
-                .put("/user/password")
+                .put(versionnedUrl("/user/password"))
                 .send({
                     password: "Test::11",
                 })
@@ -117,7 +118,7 @@ describe("UserController, /user", () => {
             await userActivationService.activeUser(user);
 
             const response = await request(g.app)
-                .put("/user/password")
+                .put(versionnedUrl("/user/password"))
                 .send({
                     password: "Test::11",
                 })
@@ -132,7 +133,7 @@ describe("UserController, /user", () => {
 
         it("should reject because password is too weak", async () => {
             const response = await request(g.app)
-                .put("/user/password")
+                .put(versionnedUrl("/user/password"))
                 .send({
                     password: "azerty",
                 })
@@ -145,7 +146,7 @@ describe("UserController, /user", () => {
 
         it("should return 401 because user not connected", async () => {
             const response = await request(g.app)
-                .put("/user/password")
+                .put(versionnedUrl("/user/password"))
                 .send({
                     password: "Test::11",
                 })
@@ -178,7 +179,7 @@ describe("UserController, /user", () => {
             });
 
             const response = await request(g.app)
-                .get(`/user/admin/list-users`)
+                .get(versionnedUrl(`/user/admin/list-users`))
                 .set("x-access-token", await createAndGetAdminToken())
                 .set("Accept", "application/json")
                 .expect(200);
@@ -198,7 +199,7 @@ describe("UserController, /user", () => {
             const token = await createAndGetUserToken();
             const userId = (await getDefaultUser())?._id;
             await request(g.app)
-                .delete("/user")
+                .delete(versionnedUrl("/user"))
                 .set("x-access-token", token)
                 .set("Accept", "application/json")
                 .expect(204);
@@ -222,14 +223,14 @@ describe("UserController, /user", () => {
     describe("/auth/signup", () => {
         it("prevents creating duplicate accounts - one at the time", async () => {
             const res1 = await request(g.app)
-                .post("/auth/signup")
+                .post(versionnedUrl("/auth/signup"))
                 .send({
                     email: "test.duplicate@beta.gouv.fr",
                 })
                 .set("Accept", "application/json");
 
             const res2 = await request(g.app)
-                .post("/auth/signup")
+                .post(versionnedUrl("/auth/signup"))
                 .send({
                     email: "test.duplicate@beta.gouv.fr",
                 })
@@ -239,14 +240,14 @@ describe("UserController, /user", () => {
         });
         it("prevents creating duplicate - fast requests", async () => {
             const promise1 = request(g.app)
-                .post("/auth/signup")
+                .post(versionnedUrl("/auth/signup"))
                 .send({
                     email: "test.duplicate@beta.gouv.fr",
                 })
                 .set("Accept", "application/json");
 
             const promise2 = request(g.app)
-                .post("/auth/signup")
+                .post(versionnedUrl("/auth/signup"))
                 .send({
                     email: "test.duplicate@beta.gouv.fr",
                 })

@@ -1,6 +1,7 @@
 import request = require("supertest");
 import { AgentTypeEnum, ResetPasswordErrorCodes } from "dto";
 import { createAndActiveUser, createUser, DEFAULT_PASSWORD, USER_EMAIL } from "../../__helpers__/userHelper";
+import { versionnedUrl } from "../../__helpers__/routeHelper";
 import { createResetToken } from "../../__helpers__/resetTokenHelper";
 import userResetRepository from "../../../src/modules/user/repositories/user-reset.repository";
 import notifyService from "../../../src/modules/notify/notify.service";
@@ -22,7 +23,7 @@ describe("AuthentificationController, /auth", () => {
                 success: true,
             };
             await request(g.app)
-                .post("/auth/forget-password")
+                .post(versionnedUrl("/auth/forget-password"))
                 .send({ email: "user@beta.gouv.fr" })
                 .set("Accept", "application/json")
                 .expect(200)
@@ -31,7 +32,7 @@ describe("AuthentificationController, /auth", () => {
 
         it("should return 200 even if the user doesn't exist", async () => {
             const response = await request(g.app)
-                .post("/auth/forget-password")
+                .post(versionnedUrl("/auth/forget-password"))
                 .send({
                     email: "useraa@beta.gouv.fr",
                 })
@@ -52,7 +53,7 @@ describe("AuthentificationController, /auth", () => {
             const userReset = await userResetRepository.findOneByUserId(user._id);
 
             const response = await request(g.app)
-                .post("/auth/reset-password")
+                .post(versionnedUrl("/auth/reset-password"))
                 .send({
                     password: "AAAAaaaaa;;;;2222",
                     token: userReset?.token,
@@ -72,7 +73,7 @@ describe("AuthentificationController, /auth", () => {
             const userReset = await userResetRepository.findOneByUserId(user._id);
 
             const response = await request(g.app)
-                .post("/auth/reset-password")
+                .post(versionnedUrl("/auth/reset-password"))
                 .send({
                     password: "AAAAaaa",
                     token: userReset?.token,
@@ -86,7 +87,7 @@ describe("AuthentificationController, /auth", () => {
 
         it("should reject because wrong token", async () => {
             const response = await request(g.app)
-                .post("/auth/reset-password")
+                .post(versionnedUrl("/auth/reset-password"))
                 .send({
                     password: "AAAAaaaaa;;;;2222",
                     token: "sdsdsdsd",
@@ -109,7 +110,7 @@ describe("AuthentificationController, /auth", () => {
             UserActivationService.RESET_TIMEOUT = 0;
 
             const response = await request(g.app)
-                .post("/auth/reset-password")
+                .post(versionnedUrl("/auth/reset-password"))
                 .send({
                     password: "AAAAaaaaa;;;;2222",
                     token: userReset?.token,
@@ -144,7 +145,7 @@ describe("AuthentificationController, /auth", () => {
                 };
 
                 await request(g.app)
-                    .post("/auth/login")
+                    .post(versionnedUrl("/auth/login"))
                     .send({
                         password: DEFAULT_PASSWORD,
                         email: USER_EMAIL,
@@ -158,7 +159,7 @@ describe("AuthentificationController, /auth", () => {
 
             it("should not return password", async () => {
                 await request(g.app)
-                    .post("/auth/login")
+                    .post(versionnedUrl("/auth/login"))
                     .send({
                         password: DEFAULT_PASSWORD,
                         email: USER_EMAIL,
@@ -169,7 +170,7 @@ describe("AuthentificationController, /auth", () => {
 
             it("should not log user", async () => {
                 await request(g.app)
-                    .post("/auth/login")
+                    .post(versionnedUrl("/auth/login"))
                     .send({
                         password: "WRONG PASSWORD",
                         email: USER_EMAIL,
@@ -183,7 +184,7 @@ describe("AuthentificationController, /auth", () => {
             beforeEach(async () => await createUser());
             it("should reject because user not active", async () => {
                 const response = await request(g.app)
-                    .post("/auth/login")
+                    .post(versionnedUrl("/auth/login"))
                     .send({
                         password: DEFAULT_PASSWORD,
                         email: USER_EMAIL,
@@ -205,7 +206,7 @@ describe("AuthentificationController, /auth", () => {
         });
         it("should return user", async () => {
             await request(g.app)
-                .post("/auth/activate")
+                .post(versionnedUrl("/auth/activate"))
                 .send({
                     token: userResetToken.token,
                     data: {
@@ -229,7 +230,7 @@ describe("AuthentificationController, /auth", () => {
         describe("404 NotFoundError", () => {
             it("should return NotFoundError", async () => {
                 await request(g.app)
-                    .post("/auth/activate")
+                    .post(versionnedUrl("/auth/activate"))
                     .send({
                         token: "qdqzdqzd1414ZD^$$*",
                         data: {
@@ -275,7 +276,7 @@ describe("AuthentificationController, /auth", () => {
                 ${DATA_WITH_WRONG_DECENTRALIZED_LEVEL}
             `("return a 404 BadRequestError'", async ({ data }) => {
                 await request(g.app)
-                    .post("/auth/activate")
+                    .post(versionnedUrl("/auth/activate"))
                     .send({
                         token: userResetToken.token,
                         data,

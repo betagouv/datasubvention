@@ -8,7 +8,7 @@
         "npm": "9.6.7"
     },
     "scripts": {
-        "dev": "concurrently \"nodemon\" \"nodemon -x tsoa spec-and-routes\"",
+        "dev": "concurrently \"nodemon\" \"nodemon -x tsoa spec --basePath /:version\" \" nodemon -x tsoa routes --basePath /:version \"",
         "start": "node ./build/src/index.js",
         "cli": "ts-node src/cli.ts",
         "generate:docs": "tsoa spec",

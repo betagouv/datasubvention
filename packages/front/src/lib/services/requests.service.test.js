@@ -9,7 +9,7 @@ vi.mock("axios");
 describe("RequestService", () => {
     describe("constructor", () => {
         it("should set baseUrl", () => {
-            expect(axios.defaults.baseURL).toBe(DATASUB_URL);
+            expect(axios.defaults.baseURL).toBe(DATASUB_URL + "/v2");
         });
     });
 
