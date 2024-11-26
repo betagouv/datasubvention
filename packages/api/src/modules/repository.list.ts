@@ -21,6 +21,7 @@ import statsAssociationsVisitRepository from "./stats/repositories/statsAssociat
 import consumerTokenRepository from "./user/repositories/consumer-token.repository";
 import userResetRepository from "./user/repositories/user-reset.repository";
 import userRepository from "./user/repositories/user.repository";
+import dataLogRepository from "./data-log/repositories/dataLog.repository";
 
 export const repositoriesWithIndexes = [
     userRepository,
@@ -44,4 +45,5 @@ export const repositoriesWithIndexes = [
     uniteLegalEntreprisePort,
     uniteLegalImportsPort,
     uniteLegalNamePort,
+    dataLogRepository,
 ];
