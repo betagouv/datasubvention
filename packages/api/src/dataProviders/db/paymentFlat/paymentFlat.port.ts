@@ -29,6 +29,30 @@ export class PaymentFlatPort extends MongoRepository<PaymentFlatDbo> {
     public async deleteAll() {
         await this.collection.deleteMany({});
     }
+
+    public async findAll() {
+        return this.collection.find().toArray();
+    }
+
+    public async findAllUniqueSiren() {
+        const result = await this.collection
+            .aggregate([
+                {
+                    $group: {
+                        _id: "$siren",
+                    },
+                },
+                {
+                    $project: {
+                        _id: 0,
+                        siren: "$_id",
+                    },
+                },
+            ])
+            .toArray();
+
+        return result.map(doc => doc.siren);
+    }
 }
 
 const paymentFlatPort = new PaymentFlatPort();

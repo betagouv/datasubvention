@@ -97,6 +97,7 @@
         "toad-scheduler": "^2.3.0",
         "tqdm": "^2.0.3",
         "tsoa": "^5.1.1",
+        "unzipper": "^0.12.3",
         "winston": "^3.11.0",
         "winston-mongodb": "^5.1.1",
         "xss": "^1.0.14"

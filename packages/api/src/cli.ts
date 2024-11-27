@@ -24,6 +24,7 @@ import { initIndexes } from "./shared/MongoInit";
 import GeoCli from "./interfaces/cli/Geo.cli";
 import DataBretagneCli from "./interfaces/cli/DataBretagne.cli";
 import PaymentsFlatCli from "./interfaces/cli/PaymentsFlat.cli";
+import PocCli from "./interfaces/cli/poc.cli";
 async function main() {
     await connectDB();
     await initIndexes();
@@ -50,6 +51,7 @@ async function main() {
         GeoCli,
         DataBretagneCli,
         PaymentsFlatCli,
+        PocCli,
     ];
 
     const args = process.argv.slice(2);

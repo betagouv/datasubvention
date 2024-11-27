@@ -2,6 +2,7 @@ import rnaSirenPort from "../dataProviders/db/rnaSiren/rnaSiren.port";
 import uniteLegalEntreprisePort from "../dataProviders/db/uniteLegalEntreprise/uniteLegalEntreprise.port";
 import uniteLegalImportsPort from "../dataProviders/db/uniteLegalImports/uniteLegalImports.port";
 import uniteLegalNamePort from "../dataProviders/db/uniteLegalName/uniteLegalName.port";
+import sirenePort from "../dataProviders/db/SIRENE/sirene.port";
 import configurationsRepository from "./configurations/repositories/configurations.repository";
 import chorusLineRepository from "./providers/chorus/repositories/chorus.line.repository";
 import dauphinGisproRepository from "./providers/dauphin/repositories/dauphin-gispro.repository";
@@ -44,4 +45,5 @@ export const repositoriesWithIndexes = [
     uniteLegalEntreprisePort,
     uniteLegalImportsPort,
     uniteLegalNamePort,
+    sirenePort,
 ];

@@ -11,3 +11,7 @@ export const DEMARCHES_SIMPLIFIEES_TOKEN = process.env.DEMARCHES_SIMPLIFIEES_TOK
 
 export const DATA_BRETAGNE_USERNAME = process.env.DATA_BRETAGNE_USERNAME;
 export const DATA_BRETAGNE_PASSWORD = process.env.DATA_BRETAGNE_PASSWORD;
+
+export const POSTGRES_USER = process.env.POSTGRES_USER;
+export const POSTGRES_PASSWORD = process.env.POSTGRES_PASSWORD;
+export const POSTGRES_DB = process.env.POSTGRES_DB;

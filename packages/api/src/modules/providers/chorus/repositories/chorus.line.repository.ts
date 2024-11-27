@@ -30,6 +30,14 @@ export class ChorusLineRepository extends MongoRepository<ChorusLineEntity> {
         await this.collection.insertOne(entity);
     }
 
+    public async uniqueSiret() {
+        return (await this.collection.distinct("indexedInformations.siret"));
+    }
+
+    public async uniqueSiren() {
+        return (await this.collection.distinct("indexedInformations.siren"));
+    }
+
     public async upsertMany(entities: ChorusLineEntity[]) {
         const operations = entities.map(
             e =>
