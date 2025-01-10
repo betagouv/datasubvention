@@ -28,6 +28,21 @@ describe("ProviderRequestService", () => {
         });
     });
 
+    describe("options", () => {
+        beforeEach(() => {
+            // @ts-expect-error sendRequest is private method
+            sendRequestSpy = jest.spyOn(providerRequestService, "sendRequest").mockResolvedValue({});
+        });
+
+        it("should call sendRequest Method", async () => {
+            const url = "/test";
+            const option = { headers: { test: true } };
+            await providerRequestService.options(url, option);
+
+            expect(sendRequestSpy).toBeCalledWith("OPTIONS", url, option);
+        });
+    });
+
     describe("post", () => {
         beforeEach(() => {
             // @ts-expect-error sendRequest is private method

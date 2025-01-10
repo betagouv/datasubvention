@@ -1,4 +1,5 @@
 import { ObjectId } from "mongodb";
+import { Method } from "axios";
 
 export default interface ProviderRequestLogDbo {
     _id: ObjectId;
@@ -6,5 +7,5 @@ export default interface ProviderRequestLogDbo {
     route: string;
     date: Date;
     responseCode: number;
-    type: "GET" | "POST";
+    type: Method;
 }

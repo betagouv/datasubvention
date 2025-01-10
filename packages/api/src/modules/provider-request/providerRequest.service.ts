@@ -1,4 +1,4 @@
-import axios, { AxiosError } from "axios";
+import axios, { AxiosError, Method } from "axios";
 import providerRequestPort from "../../dataProviders/db/provider-request/providerRequest.port";
 import ProviderRequestLog from "./entities/ProviderRequestLog";
 import RequestConfig from "./@types/RequestConfig";
@@ -23,7 +23,11 @@ export class ProviderRequestService {
         return this.sendRequest<T>("POST", url, option);
     }
 
-    private sendRequest<T>(type: "GET" | "POST", url: string, option?: RequestConfig): Promise<RequestResponse<T>> {
+    options<T = any>(url: string, option?: RequestConfig) {
+        return this.sendRequest<T>("OPTIONS", url, option);
+    }
+
+    private sendRequest<T>(type: Method, url: string, option?: RequestConfig): Promise<RequestResponse<T>> {
         const date = new Date();
 
         const axiosOption = option ? RequestConfigAdapter.toAxiosRequestConfig(option) : {};
@@ -44,7 +48,7 @@ export class ProviderRequestService {
             });
     }
 
-    private async createLog(route: string, date: Date, responseCode: number, type: "GET" | "POST") {
+    private async createLog(route: string, date: Date, responseCode: number, type: Method) {
         const log = new ProviderRequestLog(this.providerId, route, date, responseCode, type);
 
         await providerRequestPort.create(log);

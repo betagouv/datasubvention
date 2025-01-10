@@ -246,6 +246,34 @@ export class ApiAssoService
         return result?.asso?.documents;
     }
 
+    /*
+    for now does not work because we get 401
+     */
+    private async validateDocAvailability(docUrl: string): Promise<boolean> {
+        if (!docUrl) return false;
+        const res = await this.http
+            .options(docUrl, {
+                headers: {
+                    Accept: "application/json",
+                    "X-Gravitee-Api-Key": API_ASSO_TOKEN as string,
+                },
+            })
+            .catch(e => e);
+        return res.status !== 404;
+    }
+
+    private async filterAvailableDocs<T extends { url: string }>(docs: T[]): Promise<T[]> {
+        const validatedDocs: T[] = [];
+        await Promise.all(
+            docs.map(doc =>
+                this.validateDocAvailability(doc.url).then(validation => {
+                    if (validation) validatedDocs.push(doc);
+                }),
+            ),
+        );
+        return validatedDocs;
+    }
+
     private async findRibs(identifier: AssociationIdentifier) {
         const documents = await this.fetchDocuments(identifier);
         if (!documents) return [];
@@ -259,8 +287,13 @@ export class ApiAssoService
 
         if (!documents) return [];
 
-        const filteredRnaDocument = this.filterRnaDocuments(documents.document_rna || []);
-        const activeDacDocuments = this.filterActiveDacDocuments(documents.document_dac || [], identifier);
+        const [availableRnaDocs, availableDacDocs] = await Promise.all([
+            this.filterAvailableDocs(documents.document_rna || []),
+            this.filterAvailableDocs(documents.document_dac || []),
+        ]);
+
+        const filteredRnaDocument = this.filterRnaDocuments(availableRnaDocs);
+        const activeDacDocuments = this.filterActiveDacDocuments(availableDacDocs, identifier);
         const filteredDacDocument = this.filterDacDocuments(activeDacDocuments);
         const ribs = this.filterRibsInDacDocuments(activeDacDocuments);
 
@@ -315,6 +348,7 @@ export class ApiAssoService
         }
         return [];
     }
+
     /**
      * |---------------------|
      * |   Documents Part    |
