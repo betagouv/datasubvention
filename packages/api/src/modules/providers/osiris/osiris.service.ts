@@ -7,7 +7,7 @@ import ProviderRequestInterface from "../../search/@types/ProviderRequestInterfa
 import { RawApplication, RawGrant } from "../../grant/@types/rawGrant";
 import DemandesSubventionsProvider from "../../subventions/@types/DemandesSubventionsProvider";
 import ProviderCore from "../ProviderCore";
-import rnaSirenSerivce from "../../rna-siren/rnaSiren.service";
+import rnaSirenService from "../../rna-siren/rnaSiren.service";
 import AssociationIdentifier from "../../../valueObjects/AssociationIdentifier";
 import EstablishmentIdentifier from "../../../valueObjects/EstablishmentIdentifier";
 import { StructureIdentifier } from "../../../@types";
@@ -20,13 +20,25 @@ import OsirisRequestAdapter from "./adapters/OsirisRequestAdapter";
 import OsirisActionEntity from "./entities/OsirisActionEntity";
 import OsirisRequestEntity from "./entities/OsirisRequestEntity";
 
-export const VALID_REQUEST_ERROR_CODE = {
-    INVALID_SIRET: 1,
-    INVALID_RNA: 2,
-    INVALID_NAME: 3,
-    INVALID_CAID: 4,
-    INVALID_OSIRISID: 5,
+export enum VALID_REQUEST_ERROR_CODE {
+    INVALID_SIRET = 1,
+    INVALID_RNA = 2,
+    INVALID_NAME = 3,
+    INVALID_CAID = 4,
+    INVALID_OSIRISID = 5,
+}
+
+type OsirisRequestValidation = {
+    message: string;
+    data: any;
+    code: VALID_REQUEST_ERROR_CODE;
 };
+
+export class InvalidOsirisRequestError extends Error {
+    constructor(public validation: OsirisRequestValidation) {
+        super();
+    }
+}
 
 export class OsirisService
     extends ProviderCore
@@ -51,7 +63,7 @@ export class OsirisService
         const existingFile = await osirisRequestPort.findByUniqueId(request.providerInformations.uniqueId);
         const { rna, siret } = request.legalInformations;
 
-        if (rna) await rnaSirenSerivce.insert(new Rna(rna), new Siret(siret).toSiren());
+        if (rna) await rnaSirenService.insert(new Rna(rna), new Siret(siret).toSiren());
 
         if (existingFile) {
             await osirisRequestPort.update(request);
@@ -110,6 +122,25 @@ export class OsirisService
         }
 
         return true;
+    }
+
+    public async validateAndComplete(osirisRequest: OsirisRequestEntity) {
+        let validation = this.validRequest(osirisRequest);
+
+        if (validation !== true && validation.code === VALID_REQUEST_ERROR_CODE.INVALID_RNA) {
+            const rnaSirenEntities = await rnaSirenService.find(
+                new Siret(osirisRequest.legalInformations.siret).toSiren(),
+            );
+
+            if (!rnaSirenEntities || !rnaSirenEntities.length) {
+                validation = osirisService.validRequest(osirisRequest, false); // we still want the request if there is no rna
+            } else {
+                osirisRequest.legalInformations.rna = rnaSirenEntities[0].rna.value;
+                validation = osirisService.validRequest(osirisRequest); // Re-validate with the new rna
+            }
+        }
+
+        if (validation !== true) throw new InvalidOsirisRequestError(validation);
     }
 
     public async addAction(action: OsirisActionEntity): Promise<{ state: string; result: OsirisActionEntity }> {

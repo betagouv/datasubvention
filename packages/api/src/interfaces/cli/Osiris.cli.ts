@@ -3,13 +3,12 @@ import fs from "fs";
 import { StaticImplements } from "../../decorators/staticImplements.decorator";
 import { CliStaticInterface } from "../../@types";
 import OsirisParser from "../../modules/providers/osiris/osiris.parser";
-import osirisService, { VALID_REQUEST_ERROR_CODE } from "../../modules/providers/osiris/osiris.service";
+import osirisService, { InvalidOsirisRequestError } from "../../modules/providers/osiris/osiris.service";
 import OsirisActionEntity from "../../modules/providers/osiris/entities/OsirisActionEntity";
 import OsirisRequestEntity from "../../modules/providers/osiris/entities/OsirisRequestEntity";
 import { COLORS } from "../../shared/LogOptions";
 import * as CliHelper from "../../shared/helpers/CliHelper";
 import { GenericParser } from "../../shared/GenericParser";
-import rnaSirenService from "../../modules/rna-siren/rnaSiren.service";
 import Siret from "../../valueObjects/Siret";
 import Rna from "../../valueObjects/Rna";
 import dataLogService from "../../modules/data-log/dataLog.service";
@@ -127,29 +126,17 @@ export default class OsirisCli {
         const results = await requests.reduce(async (acc, osirisRequest, index) => {
             const data = await acc;
 
-            let validation = osirisService.validRequest(osirisRequest);
-
-            if (validation !== true && validation.code === VALID_REQUEST_ERROR_CODE.INVALID_RNA) {
-                const rnaSirenEntities = await rnaSirenService.find(
-                    new Siret(osirisRequest.legalInformations.siret).toSiren(),
+            await osirisService
+                .validateAndComplete(osirisRequest)
+                .catch((e: InvalidOsirisRequestError) =>
+                    logs.push(
+                        `\n\nThis request is not registered because: ${e.validation.message}\n`,
+                        JSON.stringify(e.validation.data, null, "\t"),
+                    ),
                 );
+            data.push(await osirisService.addRequest(osirisRequest));
 
-                if (!rnaSirenEntities || !rnaSirenEntities.length) {
-                    validation = osirisService.validRequest(osirisRequest, false); // we still want the request if there is no rna
-                } else {
-                    osirisRequest.legalInformations.rna = rnaSirenEntities[0].rna.value;
-                    validation = osirisService.validRequest(osirisRequest); // Re-validate with the new rna
-                }
-            }
-            CliHelper.printProgress(index + 1, requests.length); // TODO why are you here
-
-            if (validation !== true) {
-                logs.push(
-                    `\n\nThis request is not registered because: ${validation.message}\n`,
-                    JSON.stringify(validation.data, null, "\t"),
-                );
-            } else data.push(await osirisService.addRequest(osirisRequest));
-
+            CliHelper.printProgress(index + 1, requests.length);
             return data;
         }, Promise.resolve([]) as Promise<{ state: string; result: OsirisRequestEntity }[]>);
         clearInterval(ticTacInterval);
