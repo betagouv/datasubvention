@@ -61,9 +61,7 @@ class OsirisPosibilitiesBuilder {
 
     async __getService(posibility) {
         const response = await this.__sendGetRequest(
-            "/Referentiel/GetSelectListServicesEcritureParPtf/?ptf=" +
-                posibility.ProgrammeTypeFinancementId +
-                "&addDefault=false",
+            `/Referentiel/GetMySelectListServicesLectureParPtf/?ptfIdsStr=["${posibility.ProgrammeTypeFinancementId}"]&addDefault=false`,
         );
         return response.data.filter(p => !p.Disabled);
     }
