@@ -68,7 +68,7 @@ export class OsirisService
         }
     }
 
-    public validRequest(request: OsirisRequestEntity) {
+    public validRequest(request: OsirisRequestEntity, rnaNeeded = true) {
         if (!Siret.isSiret(request.legalInformations.siret)) {
             return {
                 message: `INVALID SIRET FOR ${request.legalInformations.siret}`,
@@ -77,7 +77,7 @@ export class OsirisService
             };
         }
 
-        if (!Rna.isRna(request.legalInformations.rna)) {
+        if (rnaNeeded && !Rna.isRna(request.legalInformations.rna)) {
             return {
                 message: `INVALID RNA FOR ${request.legalInformations.rna}`,
                 data: request.legalInformations,
