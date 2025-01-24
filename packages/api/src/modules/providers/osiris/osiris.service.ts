@@ -60,24 +60,14 @@ export class OsirisService
     }
 
     public async addRequest(request: OsirisRequestEntity): Promise<{ state: string; result: OsirisRequestEntity }> {
-        const existingFile = await osirisRequestPort.findByUniqueId(request.providerInformations.uniqueId);
         const { rna, siret } = request.legalInformations;
 
         if (rna) await rnaSirenService.insert(new Rna(rna), new Siret(siret).toSiren());
-
-        if (existingFile) {
-            await osirisRequestPort.update(request);
-            return {
-                state: "updated",
-                result: request,
-            };
-        } else {
-            await osirisRequestPort.add(request);
-            return {
-                state: "created",
-                result: request,
-            };
-        }
+        const res = await osirisRequestPort.upsertOne(request);
+        return {
+            state: res.upsertedCount ? "created" : "updated",
+            result: request,
+        };
     }
 
     public validRequest(request: OsirisRequestEntity, rnaNeeded = true) {
