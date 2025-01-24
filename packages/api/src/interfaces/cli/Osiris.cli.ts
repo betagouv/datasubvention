@@ -116,36 +116,41 @@ export default class OsirisCli {
 
     private async _parseRequest(contentFile: Buffer, year: number, logs: unknown[]) {
         const requests = OsirisParser.parseRequests(contentFile, year);
+        let nbErrors = 0;
 
         let tictackClock = true;
         const ticTacInterval = setInterval(() => {
             tictackClock = !tictackClock;
             console.log(tictackClock ? "TIC" : "TAC");
-        }, 10000);
+        }, 100000);
+        const validated: OsirisRequestEntity[] = [];
 
-        const results = await requests.reduce(async (acc, osirisRequest, index) => {
-            const data = await acc;
+        // validate all requests in any order
+        await Promise.all(
+            requests.map(r =>
+                osirisService
+                    .validateAndComplete(r)
+                    .then(() => validated.push(r))
+                    .catch((e: InvalidOsirisRequestError) => {
+                        logs.push(
+                            `\n\nThis request is not registered because: ${e.validation.message}\n`,
+                            JSON.stringify(e.validation.data, null, "\t"),
+                        );
+                        nbErrors += 1;
+                    }),
+            ),
+        );
+        const result = await osirisService.bulkAddRequest(validated);
+        if (!result) return;
+        CliHelper.printProgress(validated.length, requests.length);
 
-            await osirisService
-                .validateAndComplete(osirisRequest)
-                .catch((e: InvalidOsirisRequestError) =>
-                    logs.push(
-                        `\n\nThis request is not registered because: ${e.validation.message}\n`,
-                        JSON.stringify(e.validation.data, null, "\t"),
-                    ),
-                );
-            data.push(await osirisService.addRequest(osirisRequest));
-
-            CliHelper.printProgress(index + 1, requests.length);
-            return data;
-        }, Promise.resolve([]) as Promise<{ state: string; result: OsirisRequestEntity }[]>);
         clearInterval(ticTacInterval);
-
-        const created = results.filter(({ state }) => state === "created");
         console.info(`
-            ${results.length}/${requests.length}
-            ${created.length} requests created and ${results.length - created.length} requests updated
-            ${requests.length - results.length} requests not valid
+            ${validated.length}/${requests.length}
+            ${result.insertedCount + result.upsertedCount} requests created and ${
+            result.modifiedCount + result.matchedCount
+        } requests updated
+            ${nbErrors} requests not valid
         `);
     }
 

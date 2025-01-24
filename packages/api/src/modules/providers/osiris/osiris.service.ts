@@ -1,4 +1,5 @@
 import { DemandeSubvention, Association, Etablissement } from "dto";
+import { BulkWriteResult } from "mongodb";
 import { ProviderEnum } from "../../../@enums/ProviderEnum";
 import { isAssociationName, isCompteAssoId, isOsirisRequestId, isOsirisActionId } from "../../../shared/Validators";
 import AssociationsProvider from "../../associations/@types/AssociationsProvider";
@@ -68,6 +69,20 @@ export class OsirisService
             state: res.upsertedCount ? "created" : "updated",
             result: request,
         };
+    }
+
+    public async bulkAddRequest(requests: OsirisRequestEntity[]): Promise<void | BulkWriteResult> {
+        const rnaSirens: { rna: Rna; siren: Siren }[] = [];
+        for (const request of requests) {
+            const { rna, siret } = request.legalInformations;
+            if (rna) rnaSirens.push({ rna: new Rna(rna), siren: new Siret(siret).toSiren() });
+        }
+        const [metadataRequests, _metadataRnaSiren] = await Promise.all([
+            osirisRequestPort.bulkUpsert(requests),
+            rnaSirenService.insertMany(rnaSirens),
+        ]);
+
+        return metadataRequests;
     }
 
     public validRequest(request: OsirisRequestEntity, rnaNeeded = true) {

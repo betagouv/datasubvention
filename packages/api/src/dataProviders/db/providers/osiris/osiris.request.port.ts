@@ -44,6 +44,20 @@ export class OsirisRequestPort extends MongoPort<OsirisRequestEntity> {
         );
     }
 
+    public async bulkUpsert(osirisRequests: OsirisRequestEntity[]) {
+        const bulk = osirisRequests.map(r => {
+            const { _id, ...requestWithoutId } = r;
+            return {
+                updateOne: {
+                    filter: { "providerInformations.uniqueId": r.providerInformations.uniqueId },
+                    update: { $set: requestWithoutId },
+                    upsert: true,
+                },
+            };
+        });
+        return bulk.length ? this.collection.bulkWrite(bulk, { ordered: false }) : Promise.resolve();
+    }
+
     public async findByMongoId(id: string): Promise<OsirisRequestEntity | null> {
         return this.collection.findOne({ _id: new ObjectId(id) });
     }

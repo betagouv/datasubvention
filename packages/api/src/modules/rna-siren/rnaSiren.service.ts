@@ -30,6 +30,17 @@ export class RnaSirenService {
             throw e;
         }
     }
+
+    async insertMany(duos: { rna: Rna; siren: Siren }[]) {
+        const entities = duos.map(({ rna, siren }) => new RnaSirenEntity(rna, siren));
+
+        try {
+            return rnaSirenPort.insertMany(entities);
+        } catch (e: unknown) {
+            if (e instanceof DuplicateIndexError) return;
+            throw e;
+        }
+    }
 }
 
 const rnaSirenService = new RnaSirenService();

@@ -15,6 +15,21 @@ export class RnaSirenPort extends MongoPort<RnaSirenDbo> {
         await this.collection.createIndex({ rna: 1, siren: 1 }, { unique: true });
     }
 
+    async insertMany(entities: RnaSirenEntity[]) {
+        try {
+            await this.collection.insertMany(
+                entities.map(e => RnaSirenAdapter.toDbo(e)),
+                { ordered: false },
+            );
+        } catch (e: unknown) {
+            if (isMongoDuplicateError(e)) {
+                // One or many entities already exist in database but other entities have been saved
+                return; // we can safely ignore it
+            }
+            throw e;
+        }
+    }
+
     async insert(entity: RnaSirenEntity) {
         try {
             await this.collection.insertOne(RnaSirenAdapter.toDbo(entity));
