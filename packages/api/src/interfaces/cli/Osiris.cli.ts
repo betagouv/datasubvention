@@ -3,7 +3,7 @@ import fs from "fs";
 import { StaticImplements } from "../../decorators/staticImplements.decorator";
 import { CliStaticInterface } from "../../@types";
 import OsirisParser from "../../modules/providers/osiris/osiris.parser";
-import osirisService from "../../modules/providers/osiris/osiris.service";
+import osirisService, { VALID_REQUEST_ERROR_CODE } from "../../modules/providers/osiris/osiris.service";
 import OsirisActionEntity from "../../modules/providers/osiris/entities/OsirisActionEntity";
 import OsirisRequestEntity from "../../modules/providers/osiris/entities/OsirisRequestEntity";
 import { COLORS } from "../../shared/LogOptions";
@@ -129,27 +129,21 @@ export default class OsirisCli {
 
             let validation = osirisService.validRequest(osirisRequest);
 
-            if (validation !== true && validation.code === 2) {
-                // RNA NOT FOUND // TODO: use const for decribe error
+            if (validation !== true && validation.code === VALID_REQUEST_ERROR_CODE.INVALID_RNA) {
                 const rnaSirenEntities = await rnaSirenService.find(
                     new Siret(osirisRequest.legalInformations.siret).toSiren(),
                 );
 
                 if (!rnaSirenEntities || !rnaSirenEntities.length) {
-                    logs.push(
-                        `\n\nThis request is not registered because: RNA not found\n`,
-                        JSON.stringify(osirisRequest.legalInformations, null, "\t"),
-                    );
-                    return data;
+                    validation = osirisService.validRequest(osirisRequest, false); // we still want the request if there is no rna
+                } else {
+                    osirisRequest.legalInformations.rna = rnaSirenEntities[0].rna.value;
+                    validation = osirisService.validRequest(osirisRequest); // Re-validate with the new rna
                 }
-
-                osirisRequest.legalInformations.rna = rnaSirenEntities[0].rna.value;
-                validation = osirisService.validRequest(osirisRequest); // Re-validate with the new rna
             }
+            CliHelper.printProgress(index + 1, requests.length); // TODO why are you here
 
-            CliHelper.printProgress(index + 1, requests.length);
-
-            if (validation !== true && validation.code != 2) {
+            if (validation !== true) {
                 logs.push(
                     `\n\nThis request is not registered because: ${validation.message}\n`,
                     JSON.stringify(validation.data, null, "\t"),
