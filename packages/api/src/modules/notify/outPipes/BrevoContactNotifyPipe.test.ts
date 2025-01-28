@@ -1,4 +1,10 @@
-import { AdminTerritorialLevel, AgentJobTypeEnum, AgentTypeEnum, TerritorialScopeEnum } from "dto";
+import {
+    AdminTerritorialLevel,
+    AgentJobTypeEnum,
+    AgentTypeEnum,
+    RegistrationSrcTypeEnum,
+    TerritorialScopeEnum,
+} from "dto";
 import { API_SENDINBLUE_CONTACT_LIST } from "../../../configurations/apis.conf";
 import { NotificationType } from "../@types/NotificationType";
 import BrevoContactNotifyPipe from "./BrevoContactNotifyPipe";
@@ -121,6 +127,13 @@ describe("BrevoContactNotifyPipe", () => {
             lastName: "NOM",
             firstName: "PRENOM",
             lastActivityDate: new Date("2023-04-06"),
+            registrationSrc: [
+                RegistrationSrcTypeEnum.DEMO,
+                RegistrationSrcTypeEnum.COLLEAGUES_HIERARCHY,
+                RegistrationSrcTypeEnum.OTHER,
+            ],
+            registrationSrcEmail: "test@mail.com",
+            registrationSrcDetails: "Autre raison",
         };
 
         it("should call updateContact()", async () => {

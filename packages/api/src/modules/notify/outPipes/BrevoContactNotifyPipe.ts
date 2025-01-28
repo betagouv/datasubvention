@@ -1,6 +1,12 @@
 import * as Sentry from "@sentry/node";
 import Brevo from "@getbrevo/brevo";
-import { AdminTerritorialLevel, AgentJobTypeEnum, AgentTypeEnum, TerritorialScopeEnum } from "dto";
+import {
+    AdminTerritorialLevel,
+    AgentJobTypeEnum,
+    AgentTypeEnum,
+    RegistrationSrcTypeEnum,
+    TerritorialScopeEnum,
+} from "dto";
 import { NotificationDataTypes } from "../@types/NotificationDataTypes";
 import { NotificationType } from "../@types/NotificationType";
 import { NotifyOutPipe } from "../@types/NotifyOutPipe";
@@ -196,6 +202,14 @@ export class BrevoContactNotifyPipe extends BrevoNotifyPipe implements NotifyOut
             [TerritorialScopeEnum.OTHER]: "Autre",
         };
 
+        const REGISTRATION_SRC_LABEL_MAPPING = {
+            [RegistrationSrcTypeEnum.DEMO]: "Présentation Data.Subvention",
+            [RegistrationSrcTypeEnum.SEARCH_ENGINE]: "Recherches sur internet",
+            [RegistrationSrcTypeEnum.COLLEAGUES_HIERARCHY]: "Collègues ou hiérarchie",
+            [RegistrationSrcTypeEnum.SOCIALS]: "Publication sur les réseaux sociaux",
+            [RegistrationSrcTypeEnum.OTHER]: "Autre",
+        };
+
         const ATTRIBUTES_MAPPING = {
             agentType: "CATEGORIE",
             service: "SERVICE",
@@ -209,6 +223,9 @@ export class BrevoContactNotifyPipe extends BrevoNotifyPipe implements NotifyOut
             firstName: "PRENOM",
             lastActivityDate: "DERNIERE_CONNEXION",
             region: "REGION",
+            registrationSrc: "PROVENANCE",
+            registrationSrcEmail: "PROVENANCE_EMAIL",
+            registrationSrcDetails: "PROVENANCE_AUTRE",
         };
 
         function buildAttributesObject(data) {
@@ -227,6 +244,11 @@ export class BrevoContactNotifyPipe extends BrevoNotifyPipe implements NotifyOut
                         break;
                     case "territorialScope":
                         acc[ATTRIBUTES_MAPPING[key]] = TERRITORIAL_SCOPE_LABEL_MAPPING[data[key]];
+                        break;
+                    case "registrationSrc":
+                        acc[ATTRIBUTES_MAPPING[key]] = (data[key] || [])
+                            .map(registrationSrc => REGISTRATION_SRC_LABEL_MAPPING[registrationSrc])
+                            .join(",");
                         break;
                     default:
                         if (Object.keys(ATTRIBUTES_MAPPING).includes(key)) acc[ATTRIBUTES_MAPPING[key]] = data[key];
