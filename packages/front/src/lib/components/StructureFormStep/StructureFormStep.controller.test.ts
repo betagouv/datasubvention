@@ -1,6 +1,7 @@
-import { AgentTypeEnum } from "dto";
+import { AgentTypeEnum, RegistrationSrcTypeEnum } from "dto";
 import type { MockInstance } from "vitest";
 import { beforeEach } from "vitest";
+import type { SpyInstance } from "vitest";
 import StructureFormStepController from "./StructureFormStep.controller";
 import Dispatch from "$lib/core/Dispatch";
 import { isPhoneNumber } from "$lib/helpers/stringHelper";
@@ -206,6 +207,72 @@ describe("StructureFormStepController", () => {
         it("remove values from other substeps", () => {
             ctrl.cleanSubStepValues(values, AgentTypeEnum.OPERATOR);
             expect(values.centralSomething).toBeUndefined();
+        });
+    });
+
+    describe("onUpdateRegistrationSrc", () => {
+        let mockUpdate: SpyInstance;
+        beforeEach(() => {
+            mockUpdate = vi.spyOn(StructureFormStepController.prototype, "onUpdate").mockImplementation(vi.fn());
+        });
+
+        afterAll(() => {
+            mockUpdate.mockRestore();
+        });
+
+        it("registrationSrcEmail and registrationSrcDetails are set to empty strings", () => {
+            const values = {
+                registrationSrc: [RegistrationSrcTypeEnum.DEMO],
+                registrationSrcEmail: "test@email.com",
+                registrationSrcDetails: "Other",
+            };
+            const expected = {
+                registrationSrc: [RegistrationSrcTypeEnum.DEMO],
+                registrationSrcEmail: "",
+                registrationSrcDetails: "",
+            };
+            ctrl.onUpdateRegistrationSrc(values);
+            expect(values).toStrictEqual(expected);
+        });
+        it("registrationSrcEmail and registrationSrcDetails are not set to empty strings", () => {
+            const values = {
+                registrationSrc: [RegistrationSrcTypeEnum.COLLEAGUES_HIERARCHY, RegistrationSrcTypeEnum.OTHER],
+                registrationSrcEmail: "test@email.com",
+                registrationSrcDetails: "Other",
+            };
+            const expected = { ...values };
+            ctrl.onUpdateRegistrationSrc(values);
+            expect(values).toStrictEqual(expected);
+        });
+    });
+
+    describe("isRegistrationSrcEmailVisible", () => {
+        it("is visible", () => {
+            const registerSrcValue = [RegistrationSrcTypeEnum.SOCIALS, RegistrationSrcTypeEnum.COLLEAGUES_HIERARCHY];
+            const expected = true;
+            const isVisible = ctrl.isRegistrationSrcEmailVisible(registerSrcValue);
+            expect(isVisible).toStrictEqual(expected);
+        });
+        it("is not visible", () => {
+            const registerSrcValue = [RegistrationSrcTypeEnum.SOCIALS, RegistrationSrcTypeEnum.OTHER];
+            const expected = false;
+            const isVisible = ctrl.isRegistrationSrcEmailVisible(registerSrcValue);
+            expect(isVisible).toStrictEqual(expected);
+        });
+    });
+
+    describe("isRegistrationSrcDetailsVisible", () => {
+        it("is visible", () => {
+            const registerSrcValue = [RegistrationSrcTypeEnum.SOCIALS, RegistrationSrcTypeEnum.OTHER];
+            const expected = true;
+            const isVisible = ctrl.isRegistrationSrcDetailsVisible(registerSrcValue);
+            expect(isVisible).toStrictEqual(expected);
+        });
+        it("is not visible", () => {
+            const registerSrcValue = [RegistrationSrcTypeEnum.SOCIALS, RegistrationSrcTypeEnum.COLLEAGUES_HIERARCHY];
+            const expected = false;
+            const isVisible = ctrl.isRegistrationSrcDetailsVisible(registerSrcValue);
+            expect(isVisible).toStrictEqual(expected);
         });
     });
 });

@@ -1,4 +1,4 @@
-import { AgentTypeEnum, AgentJobTypeEnum } from "dto";
+import { AgentTypeEnum, AgentJobTypeEnum, RegistrationSrcTypeEnum } from "dto";
 import type { ComponentType, SvelteComponent } from "svelte";
 import OperatorSubStep from "./OperatorSubStep/OperatorSubStep.svelte";
 import CentralSubStep from "./CentralSubStep/CentralSubStep.svelte";
@@ -47,6 +47,16 @@ export default class StructureFormStepController {
         { value: AgentJobTypeEnum.SERVICE_HEAD, label: "Responsable de service" },
         { value: AgentJobTypeEnum.CONTROLLER, label: "Contrôleur / Inspecteur" },
         { value: AgentJobTypeEnum.OTHER, label: "Autre" },
+    ];
+    public readonly registrationSrcOptions: Option<RegistrationSrcTypeEnum>[] = [
+        { value: RegistrationSrcTypeEnum.DEMO, label: "Lors d’une présentation avec une personne de Data.Subvention" },
+        { value: RegistrationSrcTypeEnum.SEARCH_ENGINE, label: "Via des recherches sur internet" },
+        {
+            value: RegistrationSrcTypeEnum.COLLEAGUES_HIERARCHY,
+            label: "Un de mes collègues ou de ma hiérarchie m’en a parlé",
+        },
+        { value: RegistrationSrcTypeEnum.SOCIALS, label: "Via une publication sur les réseaux sociaux" },
+        { value: RegistrationSrcTypeEnum.OTHER, label: "Autre" },
     ];
 
     private static subStepByAgentType: Record<AgentTypeEnum, ComponentType> = {
@@ -102,6 +112,27 @@ export default class StructureFormStepController {
         this.dispatch(shouldBlockStep ? "error" : "valid");
     }
 
+    onUpdateRegistrationSrc(values: Record<string, unknown>) {
+        //Set registrationSrcEmail & registrationSrcDetails to empty, to avoid saving unused data
+        this.onUpdate(values, "registrationSrc");
+        if (values["registrationSrc"] && Array.isArray(values["registrationSrc"])) {
+            if (
+                !values["registrationSrc"].includes(RegistrationSrcTypeEnum.COLLEAGUES_HIERARCHY) &&
+                values["registrationSrcEmail"] !== ""
+            ) {
+                values["registrationSrcEmail"] = "";
+                this.onUpdate(values, "registrationSrcEmail");
+            }
+            if (
+                !values["registrationSrc"].includes(RegistrationSrcTypeEnum.OTHER) &&
+                values["registrationSrcDetails"] !== ""
+            ) {
+                values["registrationSrcDetails"] = "";
+                this.onUpdate(values, "registrationSrcDetails");
+            }
+        }
+    }
+
     cleanSubStepValues(values: Record<string, any>, contextAgentType: AgentTypeEnum) {
         const prefixes: string[] = [];
         for (const [agentType, prefix] of Object.entries(StructureFormStepController.subFieldsPrefixByAgentType)) {
@@ -129,5 +160,13 @@ export default class StructureFormStepController {
                   }
                 : undefined,
         );
+    }
+
+    isRegistrationSrcEmailVisible(registerSrcValue: RegistrationSrcTypeEnum[]) {
+        return registerSrcValue && registerSrcValue.includes(RegistrationSrcTypeEnum.COLLEAGUES_HIERARCHY);
+    }
+
+    isRegistrationSrcDetailsVisible(registerSrcValue: RegistrationSrcTypeEnum[]) {
+        return registerSrcValue && registerSrcValue.includes(RegistrationSrcTypeEnum.OTHER);
     }
 }

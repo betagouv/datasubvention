@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { RegistrationSrcTypeEnum } from "dto";
     import StructureFormStepController from "./StructureFormStep.controller";
     import Checkbox from "$lib/dsfr/Checkbox.svelte";
     import Input from "$lib/dsfr/Input.svelte";
@@ -7,6 +8,9 @@
         service: "",
         jobType: [],
         phoneNumber: "",
+        registrationSrc: [] as RegistrationSrcTypeEnum[],
+        registrationSrcEmail: "",
+        registrationSrcDetails: "",
     };
     export let context = {};
 
@@ -55,4 +59,39 @@
             on:change
             on:blur={() => ctrl.onUpdate(values, "phoneNumber")} />
     </div>
+
+    <div class="fr-fieldset__element fr-mb-0 fr-mt-4v">
+        <Checkbox
+            options={ctrl.registrationSrcOptions}
+            label="Comment avez-vous connu Data.Subvention ?"
+            errorMsg={$errors.registrationSrc}
+            on:change={() => ctrl.onUpdateRegistrationSrc(values)}
+            bind:value={values.registrationSrc} />
+    </div>
+
+    {#if ctrl.isRegistrationSrcEmailVisible(values.registrationSrc)}
+        <div class="fr-fieldset__element">
+            <Input
+                id="registrationSrcEmail-input"
+                type="email"
+                label="Pouvez-vous nous indiquer son email ?"
+                autocomplete="email"
+                bind:value={values.registrationSrcEmail}
+                errorMsg={$errors.registrationSrcEmail}
+                error={$errors.registrationSrcEmail}
+                on:change
+                on:blur={() => ctrl.onUpdate(values, "registrationSrcEmail")} />
+        </div>
+    {/if}
+    {#if ctrl.isRegistrationSrcDetailsVisible(values.registrationSrc)}
+        <div class="fr-fieldset__element">
+            <Input
+                id="registrationSrcDetails-input"
+                type="text"
+                label="Précisez"
+                bind:value={values.registrationSrcDetails}
+                on:change
+                on:blur={() => ctrl.onUpdate(values, "registrationSrcDetails")} />
+        </div>
+    {/if}
 </fieldset>
