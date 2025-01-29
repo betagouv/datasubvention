@@ -32,12 +32,12 @@ export default class ScdlCli {
         producerSlug: string,
         exportDate: string,
         pageName?: string,
-        rowOffsetStr: number | string = 0,
+        rowOffset: number | string = 0,
     ) {
         await this.validateGenericInput(file, producerSlug, exportDate);
-        const rowOffset = typeof rowOffsetStr === "number" ? rowOffsetStr : parseInt(rowOffsetStr);
+        const parsedRowOffset = typeof rowOffset === "number" ? rowOffset : parseInt(rowOffset);
         const fileContent = fs.readFileSync(file);
-        const { entities, errors } = ScdlGrantParser.parseExcel(fileContent, pageName, rowOffset);
+        const { entities, errors } = ScdlGrantParser.parseExcel(fileContent, pageName, parsedRowOffset);
         await Promise.all([
             this.persistEntities(entities, producerSlug, exportDate as string),
             this.exportErrors(errors, file),

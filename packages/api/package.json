@@ -27,7 +27,8 @@
         "lint:all": "eslint --fix --ext .js,.ts ./{migrations,src,tests,tools}/**/*.{js,ts} ./{migrations,src,tests,tools}/*.{js,ts}",
         "prettier": "prettier --write",
         "prettier:all": "prettier --write ./{migrations,src,tests,tools}/**/*.{js,ts}",
-        "lint-format": "lint-staged"
+        "lint-format": "lint-staged",
+        "scdl:import": "ts-node src/interfaces/scripts/ScdlDataIntegration.node.ts"
     },
     "lint-staged": {
         "./{migrations,src,tests,tools}/**/*.{js,ts}": [
