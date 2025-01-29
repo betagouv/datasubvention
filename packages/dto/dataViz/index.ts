@@ -1,1 +1,1 @@
-export * from "./GetMontantVersusProgrammeRegionResponseDto";
+export * from "./GetMontantVsProgrammeRegionResponseDto";
