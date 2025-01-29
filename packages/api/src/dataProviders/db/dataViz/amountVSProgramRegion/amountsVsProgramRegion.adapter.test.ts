@@ -11,4 +11,12 @@ describe("AmountsVsProgrammeRegionAdapter", () => {
             expect(actual).toEqual(expected);
         });
     });
+
+    describe("toEntity", () => {
+        it("should return right mapping", () => {
+            const actual = AmountsVsProgrammeRegionAdapter.toEntity(AMOUNTS_VS_PROGRAM_REGION_DBOS[0]);
+            const expected = AMOUNTS_VS_PROGRAM_REGION_ENTITIES[0];
+            expect(actual).toEqual(expected);
+        });
+    });
 });

@@ -178,4 +178,24 @@ describe("amountsVSProgrammeRegionService", () => {
             expect(mockHasBeenInitialized).toHaveBeenCalledTimes(1);
         });
     });
+
+    describe("getAmountsVsProgrammeRegionData", () => {
+        let mockFindAll: jest.SpyInstance;
+
+        beforeEach(() => {
+            mockFindAll = jest
+                .spyOn(amountsVsProgrammeRegionPort, "findAll")
+                .mockResolvedValue(AMOUNTS_VS_PROGRAM_REGION_ENTITIES);
+        });
+
+        afterEach(() => {
+            jest.restoreAllMocks();
+        });
+
+        it("should call findAll", () => {
+            amountsVsProgrammeRegionService.getAmountsVsProgramRegionData();
+
+            expect(mockFindAll).toHaveBeenCalledTimes(1);
+        });
+    });
 });
