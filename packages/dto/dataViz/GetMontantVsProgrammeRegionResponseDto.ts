@@ -1,11 +1,7 @@
+import { MontantVsProgrammeRegionDto } from "./MontantVsProgrammeRegionDto";
+
 export interface GetMontantVsProgrammeRegionSuccessResponse {
-    montantVersusProgrammeRegion: {
-        exerciceBudgetaire: number;
-        montant: number;
-        programme: string;
-        regionAttachementComptable: string;
-        mission: string | null;
-    };
+    montantVersusProgrammeRegionData: MontantVsProgrammeRegionDto[];
 }
 
 export type GetMontantVsProgrammeRegionResponseDto = GetMontantVsProgrammeRegionSuccessResponse;
