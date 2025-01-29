@@ -15,4 +15,16 @@ describe("PaymentFlatAdapter", () => {
             expect(result).toEqual({ ...PAYMENT_FLAT_DBO_WITH_NULLS, _id: expect.any(ObjectId) });
         });
     });
+
+    describe("dboToEntity", () => {
+        it("given dbo without nulls, should return a PaymentFlatEntity without nulls", () => {
+            const result = PaymentsFlatAdapter.dboToEntity(PAYMENT_FLAT_DBO);
+            expect(result).toEqual(PAYMENT_FLAT_ENTITY);
+        });
+        it("given dbo with nulls, should return a PaymentFlatEntity with nulls", () => {
+            const result = PaymentsFlatAdapter.dboToEntity(PAYMENT_FLAT_DBO_WITH_NULLS);
+            expect(result).toEqual(PAYMENT_FLAT_ENTITY_WITH_NULLS);
+        });
+    });
+
 });

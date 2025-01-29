@@ -1,4 +1,3 @@
-import { cp } from "fs";
 import PaymentFlatEntity from "./PaymentFlatEntity";
 import * as Sentry from "@sentry/node";
 
@@ -20,10 +19,10 @@ describe("PaymentFlatEntity", () => {
             expect(actual).toEqual(expected);
         });
 
-        it("should return null for an invalid region code", () => {
+        it("should return region name not found for an invalid region code", () => {
             const actual = PaymentFlatEntity.getRegionAttachementComptable("INVALID");
-
-            expect(actual).toBeNull();
+            const expected = "code region inconnu";
+            expect(actual).toBe(expected);
         });
 
         it("should call Sentry.captureException for an invalid region code", () => {
@@ -32,10 +31,10 @@ describe("PaymentFlatEntity", () => {
             expect(Sentry.captureException).toHaveBeenCalled();
         });
 
-        it("should return null for a null region code", () => {
-            const actual = PaymentFlatEntity.getRegionAttachementComptable(null);
-
-            expect(actual).toBeNull();
+        it("should return N/A for a N/A region code", () => {
+            const actual = PaymentFlatEntity.getRegionAttachementComptable("N/A");
+            const expected = "N/A";
+            expect(actual).toBe(expected);
         });
     });
 });

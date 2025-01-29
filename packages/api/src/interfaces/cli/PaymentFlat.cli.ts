@@ -17,6 +17,7 @@ export default class PaymentFlatCli extends CliController {
 
     // should only be used once, then sync with resyncExercise
     async init() {
+        console.log("ciao");
         if (await paymentsFlatService.isCollectionInitialized())
             throw new Error("DB already initialized, used resyncExercice instead");
 

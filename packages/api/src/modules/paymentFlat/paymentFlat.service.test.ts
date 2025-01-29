@@ -246,4 +246,17 @@ describe("PaymentFlatService", () => {
             expect(mockUpsertMany).toHaveBeenNthCalledWith(2, EXPECTED_CALLS[1]);
         });
     });
+
+    describe("cursorFindChorusOnly", () => {
+        it("should call chorusLinePort.cursorFindChorusOnly with undefined", () => {
+            paymentFlatService.cursorFindChorusOnly();
+            expect(paymentFlatPort.cursorFindChorusOnly).toHaveBeenCalledWith(undefined);
+        });
+
+        it("should call chorusLinePort.findData with exerciceBudgetaire", () => {
+            const exerciceBudgetaire = 2021;
+            paymentFlatService.cursorFindChorusOnly(exerciceBudgetaire);
+            expect(paymentFlatPort.cursorFindChorusOnly).toHaveBeenCalledWith(exerciceBudgetaire);
+        });
+    });
 });

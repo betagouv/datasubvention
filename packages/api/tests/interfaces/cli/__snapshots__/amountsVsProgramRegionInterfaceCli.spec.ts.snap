@@ -1,0 +1,51 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`AmountsVsProgrammeRegionCli init() should persist amounts vs programme region collection: Snapshot init 1`] = `
+Array [
+  Object {
+    "_id": Any<ObjectId>,
+    "exerciceBudgetaire": 2023,
+    "mission": "Mission Exemple",
+    "montant": 8000,
+    "programme": "1 - Programme Exemple",
+    "regionAttachementComptable": "Bretagne",
+  },
+  Object {
+    "_id": Any<ObjectId>,
+    "exerciceBudgetaire": 2023,
+    "mission": "Mission Exemple",
+    "montant": 100000,
+    "programme": "1234 - Programme Exemple",
+    "regionAttachementComptable": "Bretagne",
+  },
+  Object {
+    "_id": Any<ObjectId>,
+    "exerciceBudgetaire": 2021,
+    "mission": "Mission Exemple",
+    "montant": 34000,
+    "programme": "1 - Programme Exemple",
+    "regionAttachementComptable": "Normandie",
+  },
+]
+`;
+
+exports[`AmountsVsProgrammeRegionCli resyncExercice() should persist amounts vs programme region collection for the given exercice: Snapshot resyncExercice 1`] = `
+Array [
+  Object {
+    "_id": Any<ObjectId>,
+    "exerciceBudgetaire": 2023,
+    "mission": "Mission Exemple",
+    "montant": 8000,
+    "programme": "1 - Programme Exemple",
+    "regionAttachementComptable": "Bretagne",
+  },
+  Object {
+    "_id": Any<ObjectId>,
+    "exerciceBudgetaire": 2023,
+    "mission": "Mission Exemple",
+    "montant": 100000,
+    "programme": "1234 - Programme Exemple",
+    "regionAttachementComptable": "Bretagne",
+  },
+]
+`;

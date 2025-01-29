@@ -1,8 +1,7 @@
 import chorusLinePort from "./chorus.line.port";
 import MongoPort from "../../../../shared/MongoPort";
 import ChorusLineEntity from "../../../../modules/providers/chorus/entities/ChorusLineEntity";
-import { ObjectId } from "mongodb";
-import { update } from "lodash";
+
 describe("chorusLinePort", () => {
     let mockBulkWrite = jest.fn();
 

@@ -57,15 +57,15 @@ export default class PaymentFlatEntity {
         PAYL: "Pays de la Loire",
     };
 
-    public static getRegionAttachementComptable(attachementComptable: string | null): string | null {
-        if (!attachementComptable) return null;
+    public static getRegionAttachementComptable(attachementComptable: string | "N/A"): string | "N/A" {
+        if (attachementComptable == "N/A") return "N/A";
 
         const region = PaymentFlatEntity.regionMapping[attachementComptable];
         if (region === undefined) {
             const errorMessage = `Unknown region code: ${attachementComptable}`;
             Sentry.captureException(new Error(errorMessage));
             console.error(errorMessage);
-            return null;
+            return "code region inconnu";
         }
         return region;
     }
@@ -136,11 +136,11 @@ export default class PaymentFlatEntity {
         },
         provider: {
             path: [],
-            adapter: () => "Chorus",
+            adapter: () => "chorus",
         },
     };
 
-    public regionAttachementComptable: string | null;
+    public regionAttachementComptable: string | "N/A" | "code region inconnu";
     public idVersement: string;
     public uniqueId: string;
 
@@ -153,7 +153,7 @@ export default class PaymentFlatEntity {
         public amount: number,
         public operationDate: Date,
         public centreFinancierCode: string | "N/A",
-        public centreFinancierLibelle: string | null,
+        public centreFinancierLibelle: string | "N/A" | null,
         public attachementComptable: string | "N/A",
         public ej: string,
         public provider: string,

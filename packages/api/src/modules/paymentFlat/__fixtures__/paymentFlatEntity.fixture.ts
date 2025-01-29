@@ -15,7 +15,7 @@ export const PAYMENT_FLAT_ENTITY = new PaymentFlatEntity(
     "UO DGER XXXX-C001", // centre financier libelle
     "BRET", // attachement comptable
     "0001821732", // EJ
-    "Chorus", // provider
+    "chorus", // provider
     "Programme Exemple", // program
     101, // program number
     "Mission Exemple", // mission

@@ -109,6 +109,10 @@ export class PaymentFlatService {
         }
         console.log("All documents inserted");
     }
+
+    public cursorFindChorusOnly(exerciceBudgetaire?: number) {
+        return paymentFlatPort.cursorFindChorusOnly(exerciceBudgetaire);
+    }
 }
 
 const paymentFlatService = new PaymentFlatService();
