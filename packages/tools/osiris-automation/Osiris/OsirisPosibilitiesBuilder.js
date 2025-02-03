@@ -44,6 +44,8 @@ class OsirisPosibilitiesBuilder {
             IsPluriannuel: "",
             ReportName: this.reportName || "SuiviDossiers",
             TypeFederationId: "",
+            RegionBeneficiaireId: "",
+            FederationId: "",
         };
     }
 
@@ -134,12 +136,7 @@ class OsirisPosibilitiesBuilder {
             const posibility = this.__buildDefaultPosibilty();
             posibility.ProgrammeTypeFinancementId = p.Value;
 
-            if (await this.__isValid(posibility)) {
-                posibilities.push(posibility);
-                return posibilities;
-            }
-
-            posibilities.push(...(await this.__getPosibilitiesSousTypeFinancement(posibility)));
+            posibilities.push(...(await this.__getPosibilitiesServices(posibility)));
         }, Promise.resolve());
 
         console.log("Total valid posibilities :", posibilities.length);
@@ -159,7 +156,7 @@ class OsirisPosibilitiesBuilder {
                 return posibilities;
             }
 
-            const result = await this.__getPosibilitiesServices(subTypePosibility);
+            const result = await this.__getPosibilitiesPlurianual(subTypePosibility);
             return posibilities.concat(result);
         }, Promise.resolve([]));
     }
@@ -178,7 +175,7 @@ class OsirisPosibilitiesBuilder {
                 return posibilities;
             }
 
-            return posibilities.concat(await this.__getPosibilitiesPlurianual(servicePosibility));
+            return posibilities.concat(await this.__getPosibilitiesServices(servicePosibility));
         }, Promise.resolve([]));
     }
 
