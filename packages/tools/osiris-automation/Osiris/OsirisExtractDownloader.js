@@ -146,7 +146,7 @@ class OsirisExtractDownloader {
     __save(name, byte) {
         if (!this.currentDownloadCallback) return;
         console.log("Saving ...");
-        fs.writeFile(
+        fs.writeFileSync(
             `./extract/${this.year}/${this.reportName}/` + this.currentDownloadFileName + name,
             byte,
             err => err && console.error(err),
