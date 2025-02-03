@@ -16,6 +16,7 @@ export class RnaSirenPort extends MongoPort<RnaSirenDbo> {
     }
 
     async insertMany(entities: RnaSirenEntity[]) {
+        if (!entities.length) return;
         try {
             await this.collection.insertMany(
                 entities.map(e => RnaSirenAdapter.toDbo(e)),
