@@ -10,7 +10,7 @@ import {
     StructureIdentifierDto,
     AssociationIdentifierDto,
 } from "dto";
-import { Route, Get, Controller, Tags, Security, Response, Produces } from "tsoa";
+import { Route, Get, Controller, Tags, Security, Response, Produces, Middlewares, Path, Request, Hidden } from "tsoa";
 import { HttpErrorInterface } from "../../shared/errors/httpErrors/HttpError";
 
 import associationService from "../../modules/associations/associations.service";
@@ -18,19 +18,54 @@ import grantService from "../../modules/grant/grant.service";
 import { JoinedRawGrant } from "../../modules/grant/@types/rawGrant";
 import associationIdentifierService from "../../modules/association-identifier/association-identifier.service";
 import grantExtractService from "../../modules/grant/grantExtract.service";
+import { errorHandler } from "../../middlewares/ErrorMiddleware";
+import NotAssociationError from "../../shared/errors/NotAssociationError";
 
-@Route("association")
+export async function isAssoIdentifierFromAssoMiddleware(req, _res, next) {
+    /*
+     * middleware that
+     * * retrieves normalized identifier from param `identifier` and throws if identifier does not belong
+     *   to an association
+     * * stores normalized identifier in request as `assoIdentifier`
+     * requires that identifier is present in parameter `identifier`
+     * */
+    try {
+        const identifier = req.params.identifier;
+        const associationIdentifiers = await associationIdentifierService.getOneAssociationIdentifier(identifier);
+        if (!(await associationService.isIdentifierFromAsso(associationIdentifiers))) throw new NotAssociationError();
+        req.assoIdentifier = associationIdentifiers;
+    } catch (e) {
+        // somehow errorMiddleware does not catch errors in tsoa middlewares so it needs ot be called explicitly
+        errorHandler(false)(e, req, _res, next);
+    }
+    next();
+}
+
+@Route("association/{identifier}")
+@Middlewares(isAssoIdentifierFromAssoMiddleware)
 @Security("jwt")
 @Tags("Association Controller")
 export class AssociationHttp extends Controller {
+    /*
+     * gets identifier either from request (if isAssoIdentifierFromAssoMiddleware has been called) or from service from string argument.
+     * extracted to avoid boilerplate
+     * */
+    async getIdentifier(req, strIdentifier: string) {
+        return req.assoIdentifier ?? (await associationIdentifierService.getOneAssociationIdentifier(strIdentifier));
+    }
+
     /**
      * Remonte les informations d'une association
      * @param identifier Siret, Siren ou Rna
+     * @param req
      */
-    @Get("/{identifier}")
+    @Get("/")
     @Response<HttpErrorInterface>("404")
-    public async getAssociation(identifier: StructureIdentifierDto): Promise<GetAssociationResponseDto> {
-        const associationIdentifiers = await associationIdentifierService.getOneAssociationIdentifier(identifier);
+    public async getAssociation(
+        @Path() identifier: StructureIdentifierDto,
+        @Request() req,
+    ): Promise<GetAssociationResponseDto> {
+        const associationIdentifiers = await this.getIdentifier(req, identifier);
 
         const association = await associationService.getAssociation(associationIdentifiers);
         return { association };
@@ -41,11 +76,15 @@ export class AssociationHttp extends Controller {
      *
      * @summary Recherche les demandes de subventions liées à une association
      * @param identifier Identifiant Siren ou Rna
+     * @param req
      */
-    @Get("/{identifier}/subventions")
+    @Get("/subventions")
     @Response<HttpErrorInterface>("404")
-    public async getDemandeSubventions(identifier: AssociationIdentifierDto): Promise<GetSubventionsResponseDto> {
-        const associationIdentifiers = await associationIdentifierService.getOneAssociationIdentifier(identifier);
+    public async getDemandeSubventions(
+        identifier: AssociationIdentifierDto,
+        @Request() req,
+    ): Promise<GetSubventionsResponseDto> {
+        const associationIdentifiers = await this.getIdentifier(req, identifier);
         const flux = await associationService.getSubventions(associationIdentifiers);
 
         if (!flux) return { subventions: null };
@@ -62,10 +101,11 @@ export class AssociationHttp extends Controller {
      *
      * @summary Recherche les payments liés à une association
      * @param identifier Identifiant Siren ou Rna
+     * @param req
      */
-    @Get("/{identifier}/versements")
-    public async getPayments(identifier: AssociationIdentifierDto): Promise<GetPaymentsResponseDto> {
-        const associationIdentifiers = await associationIdentifierService.getOneAssociationIdentifier(identifier);
+    @Get("/versements")
+    public async getPayments(identifier: AssociationIdentifierDto, @Request() req): Promise<GetPaymentsResponseDto> {
+        const associationIdentifiers = await this.getIdentifier(req, identifier);
 
         const payments = await associationService.getPayments(associationIdentifiers);
         return { versements: payments };
@@ -75,11 +115,12 @@ export class AssociationHttp extends Controller {
      *
      * @summary Recherche toutes les informations des subventions d'une association (demandes ET versements)
      * @param identifier RNA ou SIREN de l'association
+     * @param req
      * @returns Un tableau de subventions avec leur versements, de subventions sans versements et de versements sans subventions
      */
-    @Get("/{identifier}/grants")
-    public async getGrants(identifier: AssociationIdentifierDto): Promise<GetGrantsResponseDto> {
-        const associationIdentifiers = await associationIdentifierService.getOneAssociationIdentifier(identifier);
+    @Get("/grants")
+    public async getGrants(identifier: AssociationIdentifierDto, @Request() req): Promise<GetGrantsResponseDto> {
+        const associationIdentifiers = await this.getIdentifier(req, identifier);
         const grants = await grantService.getGrants(associationIdentifiers);
         return { subventions: grants };
     }
@@ -88,13 +129,14 @@ export class AssociationHttp extends Controller {
      *
      * @summary Recherche toutes les informations des subventions d'une association (demandes ET versements) et en extrait un fichier csv
      * @param identifier RNA ou SIREN de l'association
+     * @param req
      * @returns Un tableau de subventions avec leur versements, de subventions sans versements et de versements sans subventions
      */
-    @Get("/{identifier}/grants/csv")
+    @Get("/grants/csv")
     @Produces("text/csv")
     @Response<string>("200")
-    public async getGrantsExtract(identifier: AssociationIdentifierDto): Promise<Readable> {
-        const associationIdentifiers = await associationIdentifierService.getOneAssociationIdentifier(identifier);
+    public async getGrantsExtract(identifier: AssociationIdentifierDto, @Request() req): Promise<Readable> {
+        const associationIdentifiers = await this.getIdentifier(req, identifier);
 
         const { csv, fileName } = await grantExtractService.buildCsv(associationIdentifiers);
 
@@ -113,12 +155,13 @@ export class AssociationHttp extends Controller {
      * @deprecated test purposes
      * @summary Recherche les subventions liées à une association, format brut
      * @param identifier Identifiant Siren ou Rna
+     * @param req
      */
-    @Get("/{identifier}/raw-grants")
+    @Get("/raw-grants")
     @Security("jwt", ["admin"])
     @Response<HttpErrorInterface>("404")
-    public async getRawGrants(identifier: AssociationIdentifierDto): Promise<JoinedRawGrant[]> {
-        const associationIdentifiers = await associationIdentifierService.getOneAssociationIdentifier(identifier);
+    public async getRawGrants(identifier: AssociationIdentifierDto, @Request() req): Promise<JoinedRawGrant[]> {
+        const associationIdentifiers = await this.getIdentifier(req, identifier);
 
         return grantService.getRawGrants(associationIdentifiers);
     }
@@ -128,10 +171,11 @@ export class AssociationHttp extends Controller {
      *
      * @summary Recherche les documents liés à une association
      * @param identifier Identifiant Siren ou Rna
+     * @param req
      */
-    @Get("/{identifier}/documents")
-    public async getDocuments(identifier: AssociationIdentifierDto): Promise<GetDocumentsResponseDto> {
-        const associationIdentifiers = await associationIdentifierService.getOneAssociationIdentifier(identifier);
+    @Get("/documents")
+    public async getDocuments(identifier: AssociationIdentifierDto, @Request() req): Promise<GetDocumentsResponseDto> {
+        const associationIdentifiers = await this.getIdentifier(req, identifier);
 
         const documents = await associationService.getDocuments(associationIdentifiers);
         return { documents };
@@ -140,10 +184,14 @@ export class AssociationHttp extends Controller {
     /**
      * Retourne tous les établissements liés à une association
      * @param identifier Identifiant Siren ou Rna
+     * @param req
      */
-    @Get("/{identifier}/etablissements")
-    public async getEstablishments(identifier: AssociationIdentifierDto): Promise<GetEtablissementsResponseDto> {
-        const associationIdentifiers = await associationIdentifierService.getOneAssociationIdentifier(identifier);
+    @Get("/etablissements")
+    public async getEstablishments(
+        identifier: AssociationIdentifierDto,
+        @Request() req,
+    ): Promise<GetEtablissementsResponseDto> {
+        const associationIdentifiers = await this.getIdentifier(req, identifier);
 
         const etablissements = await associationService.getEstablishments(associationIdentifiers);
         return { etablissements };
@@ -151,12 +199,11 @@ export class AssociationHttp extends Controller {
 
     /**
      * Permet de logger le mail de l'utilisateur qui fait un extract
-     * @param identifier Identifiant Siren ou Rna
-     * @deprecated
      */
-    @Get("/{identifier}/extract-data")
+    @Hidden()
+    @Get("/extract-data")
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    public async registerExtract(identifier: AssociationIdentifierDto): Promise<boolean> {
+    public async registerExtract(): Promise<boolean> {
         return true;
     }
 }

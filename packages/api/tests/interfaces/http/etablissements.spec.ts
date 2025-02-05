@@ -1,36 +1,48 @@
 import request from "supertest";
-import { createAndGetAdminToken, createAndGetUserToken } from "../__helpers__/tokenHelper";
-import etablissementService from "../../src/modules/etablissements/etablissements.service";
-import statsService from "../../src/modules/stats/stats.service";
-import { siretToSiren } from "../../src/shared/helpers/SirenHelper";
-import associationsService from "../../src/modules/associations/associations.service";
-import { BadRequestError } from "../../src/shared/errors/httpErrors";
-import OsirisRequestEntityFixture from "./providers/osiris/__fixtures__/entity";
-import { osirisRequestPort } from "../../src/dataProviders/db/providers/osiris";
-import DEFAULT_ASSOCIATION from "../__fixtures__/association.fixture";
-import rnaSirenPort from "../../src/dataProviders/db/rnaSiren/rnaSiren.port";
-import Siret from "../../src/valueObjects/Siret";
-import Rna from "../../src/valueObjects/Rna";
+import { createAndGetAdminToken, createAndGetUserToken } from "../../__helpers__/tokenHelper";
+import etablissementService from "../../../src/modules/etablissements/etablissements.service";
+import statsService from "../../../src/modules/stats/stats.service";
+import { siretToSiren } from "../../../src/shared/helpers/SirenHelper";
+import associationsService from "../../../src/modules/associations/associations.service";
+import { BadRequestError } from "../../../src/shared/errors/httpErrors";
+import OsirisRequestEntityFixture from "../../modules/providers/osiris/__fixtures__/entity";
+import { osirisRequestPort } from "../../../src/dataProviders/db/providers/osiris";
+import DEFAULT_ASSOCIATION, { LONELY_RNA, SIRET_STR } from "../../__fixtures__/association.fixture";
+import rnaSirenPort from "../../../src/dataProviders/db/rnaSiren/rnaSiren.port";
+import Siret from "../../../src/valueObjects/Siret";
+import Rna from "../../../src/valueObjects/Rna";
+import RnaSirenEntity from "../../../src/entities/RnaSirenEntity";
+import Siren from "../../../src/valueObjects/Siren";
 
 const g = global as unknown as { app: unknown };
 
-const ETABLISSEMENT_SIRET = "12345678901234";
+const ETABLISSEMENT_SIRET = SIRET_STR;
 
 describe("/etablissement", () => {
     const getSubventionsMock: jest.SpyInstance = jest.spyOn(etablissementService, "getSubventions");
+
+    beforeAll(async () => {
+        await rnaSirenPort.insert(
+            new RnaSirenEntity(new Rna(DEFAULT_ASSOCIATION.rna), new Siren(DEFAULT_ASSOCIATION.siren)),
+        );
+    });
+
     afterAll(() => {
         getSubventionsMock.mockRestore();
     });
 
     describe("/siret/subventions", () => {
+        // TODO fix these tests
         describe("on success", () => {
             const SUBVENTIONS = ["subventions"];
             const SUBVENTION_FLUX = [{ subventions: SUBVENTIONS }];
+
             beforeEach(() => {
                 getSubventionsMock.mockImplementationOnce(() => ({
                     toPromise: async () => SUBVENTION_FLUX,
                 }));
             });
+
             it("should return 200", async () => {
                 const actual = (
                     await request(g.app)
@@ -78,6 +90,12 @@ describe("/etablissement", () => {
         });
         it("should add one visits on stats AssociationsVisit", async () => {
             const beforeRequestTime = new Date();
+            await rnaSirenPort.insert(
+                new RnaSirenEntity(
+                    new Rna(LONELY_RNA),
+                    Siren.fromPartialSiretStr(OsirisRequestEntityFixture.legalInformations.siret),
+                ),
+            );
             const a = await request(g.app)
                 .get(`/etablissement/${OsirisRequestEntityFixture.legalInformations.siret}`)
                 .set("x-access-token", await createAndGetUserToken())

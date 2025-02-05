@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { SearchCodeError } from "dto";
     import TabsAsso from "./components/TabsAsso.svelte";
     import { AssociationController } from "./Association.controller";
     import DuplicateAlert from "./components/DuplicateAlert.svelte";
@@ -19,36 +20,34 @@
 {#await associationPromise}
     <FullPageSpinner description="Chargement de l'association {identifier} en cours ..." />
 {:then association}
-    {#if controller.isAssociation}
-        {#if $duplicatesFromRna}
-            <div class="fr-mb-3w">
-                <DuplicateAlert duplicates={$duplicatesFromRna} />
-            </div>
-        {/if}
-        {#if $duplicatesFromSiren}
-            <div class="fr-mb-3w">
-                <DuplicateAlert duplicates={$duplicatesFromSiren} />
-            </div>
-        {/if}
+    {#if $duplicatesFromRna}
         <div class="fr-mb-3w">
-            <StructureTitle />
+            <DuplicateAlert duplicates={$duplicatesFromRna} />
         </div>
-        <div class="fr-mb-6w">
-            <InfosLegales {association} />
+    {/if}
+    {#if $duplicatesFromSiren}
+        <div class="fr-mb-3w">
+            <DuplicateAlert duplicates={$duplicatesFromSiren} />
         </div>
-        <div class="fr-mb-6w">
-            <TabsAsso {titles} associationIdentifier={identifier} />
-        </div>
-    {:else}
+    {/if}
+    <div class="fr-mb-3w">
+        <StructureTitle />
+    </div>
+    <div class="fr-mb-6w">
+        <InfosLegales {association} />
+    </div>
+    <div class="fr-mb-6w">
+        <TabsAsso {titles} associationIdentifier={identifier} />
+    </div>
+{:catch error}
+    {#if error.httpCode === 404}
+        <DataNotFound />
+    {:else if error.httpCode === 400 && error?.data?.code === SearchCodeError.ID_NOT_ASSO}
         <div class="fr-mb-3w">
             <Alert type="warning" title="Attention">
                 Il semblerait que vous cherchiez une entreprise et non une association
             </Alert>
         </div>
-    {/if}
-{:catch error}
-    {#if error.request && error.request.status === 404}
-        <DataNotFound />
     {:else}
         <ErrorAlert message={error.message} />
     {/if}

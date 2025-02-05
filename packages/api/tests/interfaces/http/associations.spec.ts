@@ -36,6 +36,8 @@ import Rna from "../../../src/valueObjects/Rna";
 import Siret from "../../../src/valueObjects/Siret";
 import { Grant } from "dto";
 import miscScdlProducersPort from "../../../src/dataProviders/db/providers/scdl/miscScdlProducer.port";
+import RnaSirenEntity from "../../../src/entities/RnaSirenEntity";
+import Siren from "../../../src/valueObjects/Siren";
 
 jest.mock("../../../src/modules/provider-request/providerRequest.service");
 
@@ -44,6 +46,11 @@ const g = global as unknown as { app: unknown };
 const mockExternalData = async () => {};
 
 const insertData = async () => {
+    // data
+    await rnaSirenPort.insert(
+        new RnaSirenEntity(new Rna(DEFAULT_ASSOCIATION.rna), new Siren(DEFAULT_ASSOCIATION.siren)),
+    );
+
     // PAYMENTS
     await chorusLinePort.upsertMany(ChorusFixtures);
     await fonjepPaymentPort.create(FonjepPaymentFixture);
@@ -280,7 +287,7 @@ describe("/association", () => {
         it("should return empty array if identifier is RNA and no SIREN matched", async () => {
             const expected = [];
             const response = await request(g.app)
-                .get(`/association/${RNA}/raw-grants`)
+                .get(`/association/${LONELY_RNA}/raw-grants`)
                 .set("x-access-token", await createAndGetAdminToken())
                 .set("Accept", "application/json");
             expect(response.statusCode).toBe(200);
