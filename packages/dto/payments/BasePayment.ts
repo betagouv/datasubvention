@@ -7,5 +7,5 @@ export interface BasePayment {
     amount: ProviderValue<number>;
     dateOperation: ProviderValue<Date>;
     programme: ProviderValue<number>;
-    libelleProgramme: ProviderValue<string>;
+    libelleProgramme?: ProviderValue<string>;
 }

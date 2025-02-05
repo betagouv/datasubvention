@@ -1,14 +1,32 @@
 import { FindCursor, WithId } from "mongodb";
+import { Payment } from "dto";
 import paymentFlatPort from "../../dataProviders/db/paymentFlat/paymentFlat.port";
 import dataBretagneService from "../providers/dataBretagne/dataBretagne.service";
 import chorusService from "../providers/chorus/chorus.service";
 import PaymentFlatEntity from "../../entities/PaymentFlatEntity";
 import ChorusLineEntity from "../providers/chorus/entities/ChorusLineEntity";
 import PaymentFlatAdapterDbo from "../../dataProviders/db/paymentFlat/PaymentFlat.adapter";
+import PaymentProvider from "../payments/@types/PaymentProvider";
+import AssociationIdentifier from "../../valueObjects/AssociationIdentifier";
+import PaymentFlatDbo from "../../dataProviders/db/paymentFlat/PaymentFlatDbo";
+import EstablishmentIdentifier from "../../valueObjects/EstablishmentIdentifier";
+import { StructureIdentifier } from "../../@types";
+import { RawGrant, RawPayment } from "../grant/@types/rawGrant";
+import { ProviderEnum } from "../../@enums/ProviderEnum";
+import ProviderCore from "../providers/ProviderCore";
 import PaymentFlatAdapter from "./paymentFlatAdapter";
 
-export class PaymentFlatService {
+export class PaymentFlatService extends ProviderCore implements PaymentProvider<PaymentFlatDbo> {
     private BATCH_SIZE = 50000;
+
+    constructor() {
+        super({
+            name: "PaymentFlat",
+            type: ProviderEnum.raw,
+            description: "PaymentFlat",
+            id: "paymentflat",
+        });
+    }
 
     private async getAllDataBretagneData() {
         const ministries = await dataBretagneService.getMinistriesRecord();
@@ -112,6 +130,64 @@ export class PaymentFlatService {
 
     public cursorFindChorusOnly(exerciceBudgetaire?: number) {
         return paymentFlatPort.cursorFindChorusOnly(exerciceBudgetaire);
+    }
+
+    /**
+     * |-------------------------|
+     * |     Payment Part        |
+     * |-------------------------|
+     */
+
+    isPaymentProvider = true;
+
+    public rawToPayment(rawGrant: RawPayment<PaymentFlatDbo>) {
+        return PaymentFlatAdapter.rawToPayment(rawGrant);
+    }
+
+    async getPayments(identifier: StructureIdentifier): Promise<Payment[]> {
+        const requests: PaymentFlatDbo[] = [];
+
+        if (identifier instanceof EstablishmentIdentifier && identifier.siret) {
+            requests.push(...(await paymentFlatPort.findBySiret(identifier.siret)));
+        } else if (identifier instanceof AssociationIdentifier && identifier.siren) {
+            requests.push(...(await paymentFlatPort.findBySiren(identifier.siren)));
+        }
+        return this.toPaymentArray(requests);
+    }
+
+    async getPaymentsByKey(ej: string) {
+        const requests = await paymentFlatPort.findByEJ(ej);
+        return this.toPaymentArray(requests);
+    }
+
+    private toPaymentArray(documents: PaymentFlatDbo[]) {
+        return documents.map(document => {
+            return PaymentFlatAdapter.toPayment(document);
+        });
+    }
+
+    /**
+     * |-------------------------|
+     * |   Grant Part            |
+     * |-------------------------|
+     */
+
+    isGrantProvider = true;
+
+    async getRawGrants(identifier: StructureIdentifier): Promise<RawGrant[]> {
+        let dbos: PaymentFlatDbo[] = [];
+        if (identifier instanceof EstablishmentIdentifier && identifier.siret) {
+            dbos = await paymentFlatPort.findBySiret(identifier.siret);
+        } else if (identifier instanceof AssociationIdentifier && identifier.siren) {
+            dbos = await paymentFlatPort.findBySiren(identifier.siren);
+        }
+
+        return dbos.map(grant => ({
+            provider: this.provider.id,
+            type: "payment",
+            data: grant,
+            joinKey: grant.ej,
+        }));
     }
 }
 

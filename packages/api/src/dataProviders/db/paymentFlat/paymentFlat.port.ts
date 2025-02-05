@@ -1,5 +1,7 @@
 import MongoPort from "../../../shared/MongoPort";
 import PaymentFlatEntity from "../../../entities/PaymentFlatEntity";
+import Siren from "../../../valueObjects/Siren";
+import Siret from "../../../valueObjects/Siret";
 import { DefaultObject } from "../../../@types";
 import PaymentFlatDbo from "./PaymentFlatDbo";
 import PaymentFlatAdapter from "./PaymentFlat.adapter";
@@ -53,6 +55,28 @@ export class PaymentFlatPort extends MongoPort<PaymentFlatDbo> {
 
     public async deleteAll() {
         await this.collection.deleteMany({});
+    }
+
+    public async findBySiret(siret: Siret) {
+        return this.collection
+            .find({
+                typeIdEtablissementBeneficiaire: "siret",
+                idEtablissementBeneficiaire: siret.value,
+            })
+            .toArray();
+    }
+
+    public async findBySiren(siren: Siren) {
+        return this.collection
+            .find({
+                typeIdEntrepriseBeneficiaire: "siren",
+                idEntrepriseBeneficiaire: new RegExp(`^${siren.value}\\d{5}`),
+            })
+            .toArray();
+    }
+
+    public async findByEJ(ej: string) {
+        return this.collection.find({ ej: ej }).toArray();
     }
 }
 

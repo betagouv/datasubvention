@@ -5,11 +5,16 @@ import { ENTITIES } from "../providers/chorus/__fixtures__/ChorusFixtures";
 import paymentFlatService from "./paymentFlat.service";
 import chorusService from "../providers/chorus/chorus.service";
 import PaymentFlatAdapter from "./paymentFlatAdapter";
-import { PAYMENT_FLAT_ENTITY } from "./__fixtures__/paymentFlatEntity.fixture";
-import { PAYMENT_FLAT_DBO } from "../../dataProviders/db/paymentFlat/__fixtures__/paymentFlatDbo.fixture";
+import { PAYMENT_FLAT_ENTITY, PAYMENT_FROM_PAYMENT_FLAT_DBO } from "./__fixtures__/paymentFlatEntity.fixture";
+import {
+    LIST_PAYMENT_FLAT_DBO,
+    PAYMENT_FLAT_DBO,
+} from "../../dataProviders/db/paymentFlat/__fixtures__/paymentFlatDbo.fixture";
 
 import paymentFlatPort from "../../dataProviders/db/paymentFlat/paymentFlat.port";
 import PaymentFlatAdapterDbo from "../../dataProviders/db/paymentFlat/PaymentFlat.adapter";
+import Siren from "../../valueObjects/Siren";
+import AssociationIdentifier from "../../valueObjects/AssociationIdentifier";
 
 jest.mock("../providers/dataBretagne/dataBretagne.service", () => ({
     getMinistriesRecord: jest.fn(),
@@ -257,6 +262,72 @@ describe("PaymentFlatService", () => {
             const exerciceBudgetaire = 2021;
             paymentFlatService.cursorFindChorusOnly(exerciceBudgetaire);
             expect(paymentFlatPort.cursorFindChorusOnly).toHaveBeenCalledWith(exerciceBudgetaire);
+        });
+    });
+
+    describe("rawToPayment", () => {
+        it("should call PaymentFlatAdapter", () => {
+            // @ts-expect-error: parameter type
+            const rawGrant = { data: PAYMENT_FLAT_DBO } as RawGrant;
+            paymentFlatService.rawToPayment(rawGrant);
+            expect(PaymentFlatAdapter.rawToPayment).toHaveBeenCalledWith(rawGrant);
+        });
+
+        it("should return ChorusPayment", () => {
+            // @ts-expect-error: parameter type
+            const rawGrant = { data: PAYMENT_FLAT_DBO } as RawGrant;
+            jest.mocked(PaymentFlatAdapter.rawToPayment).mockReturnValueOnce(PAYMENT_FROM_PAYMENT_FLAT_DBO);
+            const expected = PAYMENT_FROM_PAYMENT_FLAT_DBO;
+            const actual = paymentFlatService.rawToPayment(rawGrant);
+            expect(actual).toEqual(expected);
+        });
+    });
+
+    describe("toPaymentArray", () => {
+        it("should call toPayment for each entity", () => {
+            // @ts-expect-error: test private method
+            paymentFlatService.toPaymentArray(LIST_PAYMENT_FLAT_DBO);
+            LIST_PAYMENT_FLAT_DBO.forEach((entity, index) => {
+                expect(PaymentFlatAdapter.toPayment).toHaveBeenNthCalledWith(index + 1, entity);
+            });
+        });
+    });
+
+    describe("raw grant", () => {
+        const DATA = [{ ej: "EJ" }];
+
+        describe("getRawGrants", () => {
+            const SIREN = new Siren("123456789");
+            const IDENTIFIER = AssociationIdentifier.fromSiren(SIREN);
+            let findBySirenMock;
+            beforeAll(
+                () =>
+                    (findBySirenMock = jest
+                        .spyOn(paymentFlatPort, "findBySiren")
+                        // @ts-expect-error: mock
+                        .mockImplementation(jest.fn(() => DATA))),
+            );
+            afterAll(() => findBySirenMock.mockRestore());
+
+            it("should call findBySiren()", async () => {
+                await paymentFlatService.getRawGrants(IDENTIFIER);
+            });
+
+            it("returns raw grant data", async () => {
+                const actual = await paymentFlatService.getRawGrants(IDENTIFIER);
+                expect(actual).toMatchInlineSnapshot(`
+                    Array [
+                      Object {
+                        "data": Object {
+                          "ej": "EJ",
+                        },
+                        "joinKey": "EJ",
+                        "provider": "paymentflat",
+                        "type": "payment",
+                      },
+                    ]
+                `);
+            });
         });
     });
 });

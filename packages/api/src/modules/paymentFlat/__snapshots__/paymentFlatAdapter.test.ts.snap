@@ -1,0 +1,66 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`PaymentFlatAdapter toPayment should return partial ChorusPayment entity 1`] = `
+Object {
+  "activitee": Object {
+    "last_update": 2023-04-01T00:00:00.000Z,
+    "provider": "PaymentFlat",
+    "type": "string",
+    "value": "Label d'activité Exemple",
+  },
+  "amount": Object {
+    "last_update": 2023-04-01T00:00:00.000Z,
+    "provider": "PaymentFlat",
+    "type": "number",
+    "value": 1000,
+  },
+  "centreFinancier": Object {
+    "last_update": 2023-04-01T00:00:00.000Z,
+    "provider": "PaymentFlat",
+    "type": "string",
+    "value": "UO DGER XXXX-C001",
+  },
+  "dateOperation": Object {
+    "last_update": 2023-04-01T00:00:00.000Z,
+    "provider": "PaymentFlat",
+    "type": "object",
+    "value": 2023-04-01T00:00:00.000Z,
+  },
+  "domaineFonctionnel": Object {
+    "last_update": 2023-04-01T00:00:00.000Z,
+    "provider": "PaymentFlat",
+    "type": "string",
+    "value": "Label d'action Exemple",
+  },
+  "ej": Object {
+    "last_update": 2023-04-01T00:00:00.000Z,
+    "provider": "PaymentFlat",
+    "type": "string",
+    "value": "EJ Exemple",
+  },
+  "libelleProgramme": Object {
+    "last_update": 2023-04-01T00:00:00.000Z,
+    "provider": "PaymentFlat",
+    "type": "string",
+    "value": "Programme Exemple",
+  },
+  "programme": Object {
+    "last_update": 2023-04-01T00:00:00.000Z,
+    "provider": "PaymentFlat",
+    "type": "number",
+    "value": 1,
+  },
+  "siret": Object {
+    "last_update": 2023-04-01T00:00:00.000Z,
+    "provider": "PaymentFlat",
+    "type": "string",
+    "value": "12345678901234",
+  },
+  "versementKey": Object {
+    "last_update": 2023-04-01T00:00:00.000Z,
+    "provider": "PaymentFlat",
+    "type": "string",
+    "value": "12345678901234-EJ Exemple-2023",
+  },
+}
+`;

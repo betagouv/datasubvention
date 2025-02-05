@@ -1,9 +1,12 @@
 import { RECORDS } from "./__fixtures__/dataBretagne.fixture";
 import { ENTITIES } from "../providers/chorus/__fixtures__/ChorusFixtures";
-import { PAYMENT_FLAT_ENTITY } from "./__fixtures__/paymentFlatEntity.fixture";
+import { PAYMENT_FLAT_ENTITY, PAYMENT_FROM_PAYMENT_FLAT_DBO } from "./__fixtures__/paymentFlatEntity.fixture";
 import PaymentFlatAdapter from "./paymentFlatAdapter";
 import ChorusLineEntity from "../providers/chorus/entities/ChorusLineEntity";
 import { ChorusLineDto } from "../providers/chorus/adapters/chorusLineDto";
+import ProviderValueAdapter from "../../shared/adapters/ProviderValueAdapter";
+import PaymentFlatDbo from "../../dataProviders/db/paymentFlat/PaymentFlatDbo";
+import { PAYMENT_FLAT_DBO } from "../../dataProviders/db/paymentFlat/__fixtures__/paymentFlatDbo.fixture";
 console.error = jest.fn();
 
 const documentDataReturnedValue = {
@@ -154,6 +157,46 @@ describe("PaymentFlatAdapter", () => {
             expect(console.error).toHaveBeenCalledWith(expect.stringMatching(expectedMessage));
 
             RECORDS["programme"][101].code_ministere = "code";
+        });
+    });
+
+    describe("rawToPayment", () => {
+        //@ts-expect-error: parameter type
+        const RAW_PAYMENT: RawPayment<PaymentFlatDbo> = { data: PAYMENT_FLAT_DBO };
+
+        let mockToPayment: jest.SpyInstance;
+        beforeAll(() => {
+            mockToPayment = jest.spyOn(PaymentFlatAdapter, "toPayment");
+            mockToPayment.mockReturnValue(PAYMENT_FROM_PAYMENT_FLAT_DBO);
+        });
+
+        afterAll(() => {
+            mockToPayment.mockRestore();
+        });
+
+        it("should call toPayment()", () => {
+            PaymentFlatAdapter.rawToPayment(RAW_PAYMENT);
+            expect(PaymentFlatAdapter.toPayment).toHaveBeenCalledWith(RAW_PAYMENT.data);
+        });
+
+        it("should return Payment", () => {
+            const expected = PAYMENT_FROM_PAYMENT_FLAT_DBO;
+            const actual = PaymentFlatAdapter.rawToPayment(RAW_PAYMENT);
+            expect(actual).toEqual(expected);
+        });
+    });
+
+    const now = new Date();
+    const toPV = (value: unknown, provider = "PaymentFlat") =>
+        ProviderValueAdapter.toProviderValue(value, provider, now);
+
+    describe("toPayment", () => {
+        it("should return partial ChorusPayment entity", () => {
+            const entity = PAYMENT_FLAT_DBO;
+
+            const actual = PaymentFlatAdapter.toPayment(entity as PaymentFlatDbo);
+
+            expect(actual).toMatchSnapshot();
         });
     });
 });

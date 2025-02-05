@@ -1,4 +1,6 @@
+import { ChorusPayment } from "dto";
 import { NestedDefaultObject } from "../../@types";
+import PaymentFlatDbo from "../../dataProviders/db/paymentFlat/PaymentFlatDbo";
 import DomaineFonctionnelEntity from "../../entities/DomaineFonctionnelEntity";
 import MinistryEntity from "../../entities/MinistryEntity";
 import PaymentFlatEntity from "../../entities/PaymentFlatEntity";
@@ -8,8 +10,12 @@ import { GenericParser } from "../../shared/GenericParser";
 
 import { ChorusLineDto } from "../providers/chorus/adapters/chorusLineDto";
 import ChorusLineEntity from "../providers/chorus/entities/ChorusLineEntity";
+import { RawPayment } from "../grant/@types/rawGrant";
+import ProviderValueAdapter from "../../shared/adapters/ProviderValueAdapter";
 
 export default class PaymentFlatAdapter {
+    static PROVIDER_NAME = "PaymentFlat";
+
     static toNotAggregatedChorusPaymentFlatEntity(
         /*
         create a PaymentFlatEntity from a ChorusLineEntity without
@@ -97,6 +103,30 @@ export default class PaymentFlatAdapter {
             ministryEntity,
             domaineFonctEntity,
             refProgrammationEntity,
+        };
+    }
+
+    public static rawToPayment(rawPayment: RawPayment<PaymentFlatDbo>) {
+        return this.toPayment(rawPayment.data);
+    }
+
+    public static toPayment(entity: PaymentFlatDbo): ChorusPayment {
+        const toPvPaymentFlat = <T>(value: T) =>
+            ProviderValueAdapter.toProviderValue<T>(value, PaymentFlatAdapter.PROVIDER_NAME, entity.dateOperation);
+
+        const toPvOrUndefined = value => (value ? toPvPaymentFlat(value) : undefined);
+
+        return {
+            ej: toPvPaymentFlat(entity.ej),
+            versementKey: toPvPaymentFlat(entity.idVersement),
+            siret: toPvPaymentFlat(entity.idEtablissementBeneficiaire),
+            amount: toPvPaymentFlat(entity.montant),
+            dateOperation: toPvPaymentFlat(entity.dateOperation),
+            centreFinancier: toPvOrUndefined(entity.libelleCentreFinancier),
+            domaineFonctionnel: toPvOrUndefined(entity.action),
+            activitee: toPvOrUndefined(entity.activite),
+            programme: toPvPaymentFlat(entity.numeroProgramme),
+            libelleProgramme: toPvOrUndefined(entity.programme),
         };
     }
 }
